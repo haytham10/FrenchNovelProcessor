@@ -1,0 +1,33 @@
+# French Novel Processor Configuration Template
+# Copy this file to config.ini and fill in your settings
+
+[OpenAI]
+# Your OpenAI API Key (get from https://platform.openai.com)
+api_key = 
+
+[Gemini]
+# Google Gemini API Key (get from https://aistudio.google.com/apikey)
+# For development/testing only - leave empty to use OpenAI
+gemini_api_key = 
+
+[Processing]
+# Default word limit per sentence
+default_word_limit = 8
+
+# Processing mode: ai_rewrite or mechanical_chunking
+processing_mode = ai_rewrite
+
+# Development: Use Gemini instead of OpenAI (true/false)
+# Only active if gemini_api_key is set
+use_gemini_dev = false
+
+[Output]
+# Show original sentences in output
+show_original_sentences = true
+
+# Generate detailed processing log
+generate_processing_log = true
+
+[GoogleSheets]
+# Google Sheets API credentials file path
+credentials_file = credentials.json

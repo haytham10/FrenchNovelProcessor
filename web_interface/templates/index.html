@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>French Novel Processor - AI-Powered</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="settings-overlay" id="settingsOverlay" onclick="toggleSettings()"></div>
+
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div>
+                    <h1>📚 French Novel Processor</h1>
+                    <p class="subtitle">Turn long French sentences into concise, fluent rewrites with AI.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-secondary" onclick="toggleSettings()">⚙️ Quick Settings</button>
+                    <button class="btn-outline btn-outline-light" onclick="document.getElementById('helpPanel').scrollIntoView({ behavior: 'smooth' });">❓ Need help?</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Settings Panel -->
+        <div class="panel settings-panel" id="settingsPanel" aria-hidden="true">
+            <div class="settings-header">
+                <h2>⚙️ Processing Settings</h2>
+                <button class="icon-button" aria-label="Close settings" onclick="toggleSettings()">✕</button>
+            </div>
+
+            <div class="settings-content">
+                <p class="settings-subtitle">Configure how the processor rewrites and exports your novel.</p>
+
+                <section class="settings-section" aria-labelledby="settings-api-title">
+                    <div class="section-title">
+                        <span class="section-icon">🔑</span>
+                        <div>
+                            <h3 id="settings-api-title">AI Provider</h3>
+                            <p class="section-caption">Choose your AI API provider for sentence rewriting.</p>
+                        </div>
+                    </div>
+
+                    <div class="mode-grid" style="margin-bottom: 20px;">
+                        <label class="mode-card">
+                            <input type="radio" name="aiProvider" value="openai" checked onchange="updateAIProviderUI()">
+                            <div class="mode-card-body">
+                                <span class="mode-card-icon">🟢</span>
+                                <div class="mode-card-text">
+                                    <span class="mode-card-title">OpenAI GPT-4o-mini</span>
+                                    <span class="mode-card-caption">Production-ready, battle-tested API.</span>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="mode-card">
+                            <input type="radio" name="aiProvider" value="gemini" onchange="updateAIProviderUI()">
+                            <div class="mode-card-body">
+                                <span class="mode-card-icon">✨</span>
+                                <div class="mode-card-text">
+                                    <span class="mode-card-title">Gemini 2.5 Flash</span>
+                                    <span class="mode-card-caption">50% cheaper, perfect for development.</span>
+                                </div>
+                                <span class="mode-card-badge" style="background: rgba(76, 175, 80, 0.18); color: #4CAF50;">Dev Mode</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div id="openaiKeySection">
+                        <div class="api-row">
+                            <div class="input-with-toggle">
+                                <input type="password" id="apiKey" placeholder="sk-..." autocomplete="off">
+                                <button type="button" class="icon-button ghost" onclick="togglePasswordVisibility('apiKey')" aria-label="Toggle API key visibility">👁</button>
+                            </div>
+                            <div class="api-actions">
+                                <button onclick="saveApiKey()" class="btn-secondary btn-pill">💾 Save</button>
+                                <button onclick="testApiKey()" class="btn-outline btn-pill">🔍 Test</button>
+                            </div>
+                        </div>
+                        <small id="apiKeyStatus" class="status-message" role="status" aria-live="polite"></small>
+                    </div>
+
+                    <div id="geminiKeySection" style="display: none;">
+                        <div class="api-row">
+                            <div class="input-with-toggle">
+                                <input type="password" id="geminiApiKey" placeholder="AIza..." autocomplete="off">
+                                <button type="button" class="icon-button ghost" onclick="togglePasswordVisibility('geminiApiKey')" aria-label="Toggle API key visibility">👁</button>
+                            </div>
+                            <div class="api-actions">
+                                <button onclick="saveGeminiApiKey()" class="btn-secondary btn-pill">💾 Save</button>
+                                <button onclick="testGeminiApiKey()" class="btn-outline btn-pill">🔍 Test</button>
+                            </div>
+                        </div>
+                        <small id="geminiApiKeyStatus" class="status-message" role="status" aria-live="polite"></small>
+                        <p class="settings-hint" style="margin-top: 10px;">💡 Get free key: <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></p>
+                    </div>
+                </section>
+
+                <section class="settings-section" aria-labelledby="settings-mode-title">
+                    <div class="section-title">
+                        <span class="section-icon">🔄</span>
+                        <div>
+                            <h3 id="settings-mode-title">Processing Mode</h3>
+                            <p class="section-caption">Choose between natural AI rewrites or simple mechanical splitting.</p>
+                        </div>
+                    </div>
+
+                    <div class="mode-grid">
+                        <label class="mode-card">
+                            <input type="radio" name="processingMode" value="ai_rewrite" checked>
+                            <div class="mode-card-body">
+                                <span class="mode-card-icon">🤖</span>
+                                <div class="mode-card-text">
+                                    <span class="mode-card-title">AI-Powered Rewriting</span>
+                                    <span class="mode-card-caption">Recommended for natural, fluent French output.</span>
+                                </div>
+                                <span class="mode-card-badge">Recommended</span>
+                            </div>
+                        </label>
+                        <label class="mode-card">
+                            <input type="radio" name="processingMode" value="mechanical_chunking">
+                            <div class="mode-card-body">
+                                <span class="mode-card-icon">⚙️</span>
+                                <div class="mode-card-text">
+                                    <span class="mode-card-title">Mechanical Chunking</span>
+                                    <span class="mode-card-caption">Splits sentences every few words without AI usage.</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </section>
+
+                <section class="settings-section" aria-labelledby="settings-output-title">
+                    <div class="section-title">
+                        <span class="section-icon">📝</span>
+                        <div>
+                            <h3 id="settings-output-title">Output Options</h3>
+                            <p class="section-caption">Fine-tune sentence length and extra context in your exports.</p>
+                        </div>
+                    </div>
+
+                    <div class="options-grid">
+                        <div class="field-block">
+                            <label for="wordLimit" class="field-label">Maximum words per sentence</label>
+                            <input type="number" id="wordLimit" value="8" min="5" max="40">
+                            <p class="field-caption">Tip: 8 keeps sentences concise; 10–12 offers more flexibility.</p>
+                        </div>
+                        <div class="toggle-stack">
+                            <div class="toggle-row">
+                                <div class="toggle-text">
+                                    <p class="toggle-title">Include original sentences</p>
+                                    <p class="toggle-caption">Show the source sentence alongside each rewrite.</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="showOriginal" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="toggle-row">
+                                <div class="toggle-text">
+                                    <p class="toggle-title">Generate processing log</p>
+                                    <p class="toggle-caption">Keep a detailed tab of rewrites, retries, and costs.</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="generateLog" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="settings-footer">
+                    <p class="settings-hint">🔒 Your API key is saved to <code>config.ini</code> on this device only.</p>
+                    <button onclick="toggleSettings()" class="btn-primary full-width">Done</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Status Cards -->
+        <section class="status-cards" aria-label="Current configuration overview">
+            <article class="status-card">
+                <div class="status-icon status-icon--api">🔐</div>
+                <div class="status-body">
+                    <h3 class="status-title">API Key</h3>
+                    <p class="status-value" id="cardApiStatus">Not configured</p>
+                    <p class="status-meta" id="cardApiMeta">Save your OpenAI key to unlock AI rewriting.</p>
+                </div>
+            </article>
+            <article class="status-card">
+                <div class="status-icon status-icon--mode" id="cardModeIcon">�</div>
+                <div class="status-body">
+                    <h3 class="status-title">Processing Mode</h3>
+                    <p class="status-value" id="cardModeValue">AI Rewriting</p>
+                    <p class="status-meta" id="cardModeMeta">Uses GPT-4o-mini for natural-sounding rewrites.</p>
+                </div>
+            </article>
+            <article class="status-card">
+                <div class="status-icon status-icon--limit">📏</div>
+                <div class="status-body">
+                    <h3 class="status-title">Word Limit</h3>
+                    <p class="status-value" id="cardWordLimit">8 words</p>
+                    <p class="status-meta" id="cardWordMeta">Original sentences: On • Log: On</p>
+                </div>
+            </article>
+        </section>
+
+        <!-- Main Processing Panel -->
+        <div class="panel processing-panel" id="processingPanel">
+            <div class="panel-heading">
+                <div>
+                    <h2>📄 Process Your Novel</h2>
+                    <p class="panel-caption">Upload a PDF, choose your settings, and monitor AI rewrites in real time.</p>
+                </div>
+                <div class="panel-actions">
+                    <button onclick="toggleSettings()" class="btn-secondary">⚙️ Settings</button>
+                </div>
+            </div>
+
+            <div class="stepper" aria-label="Processing steps">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div>
+                        <p class="step-title">Upload PDF</p>
+                        <p class="step-meta">Drag a novel or click to browse.</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div>
+                        <p class="step-title">Configure options</p>
+                        <p class="step-meta">Choose AI mode and word limits.</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div>
+                        <p class="step-title">Review results</p>
+                        <p class="step-meta">Download Excel or CSV outputs.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upload-area" id="uploadArea">
+                <input type="file" id="fileInput" accept=".pdf" hidden>
+                <div class="upload-prompt" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📁</div>
+                    <p><strong>Click to select a PDF</strong> or drag one here</p>
+                    <p class="file-info" id="fileInfo">No file selected yet.</p>
+                </div>
+                <div class="upload-hints">
+                    <span class="hint-chip">Supports PDFs up to 200 MB</span>
+                    <span class="hint-chip">OCR automatically triggered when needed</span>
+                    <span class="hint-chip">Keep this tab open during processing</span>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button onclick="startProcessing()" id="processBtn" class="btn-primary" disabled>
+                    🚀 Start Processing
+                </button>
+                <button onclick="clearSelectedFile()" class="btn-outline" id="resetBtn" style="display:none;">
+                    🔄 Choose Different File
+                </button>
+            </div>
+
+            <!-- Progress Section -->
+            <div class="progress-section" id="progressSection" style="display: none;">
+                <div class="progress-header">
+                    <h3>Processing in progress</h3>
+                    <p class="progress-caption">Sit tight! We'll keep this dashboard updated as each sentence is rewritten.</p>
+                </div>
+
+                <div class="stage-chips" id="stageChips" aria-label="Processing stage">
+                    <span class="chip active current" data-stage="upload">Upload</span>
+                    <span class="chip" data-stage="analyzing">Analyzing</span>
+                    <span class="chip" data-stage="rewriting">AI Rewriting</span>
+                    <span class="chip" data-stage="export">Export</span>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">0%</p>
+
+                <div class="status-info">
+                    <p id="statusMessage">Initializing...</p>
+                    <p id="currentSentence" class="current-sentence"></p>
+                </div>
+
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Sentences</span>
+                        <span class="stat-value" id="statTotal">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Direct</span>
+                        <span class="stat-value" id="statDirect">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">AI-Rewritten</span>
+                        <span class="stat-value" id="statAI">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">API Calls</span>
+                        <span class="stat-value" id="statAPICalls">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Estimated Cost</span>
+                        <span class="stat-value" id="statCost">$0.00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Time Elapsed</span>
+                        <span class="stat-value" id="statTime">0s</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-header">
+                    <h3>✅ Processing complete!</h3>
+                    <p class="results-caption">Your rewrites are ready. Download the files or queue another document.</p>
+                </div>
+
+                <div class="summary-grid" id="summaryGrid"></div>
+
+                <div class="download-buttons">
+                    <button onclick="downloadFile('excel')" class="btn-primary">
+                        📊 Download Excel
+                    </button>
+                    <button onclick="downloadFile('csv')" class="btn-secondary">
+                        📄 Download CSV
+                    </button>
+                </div>
+
+                <button onclick="resetProcessor()" class="btn-outline">
+                    🔄 Process another file
+                </button>
+            </div>
+
+            <!-- Error Section -->
+            <div class="error-section" id="errorSection" style="display: none;">
+                <h3>❌ Something went wrong</h3>
+                <p id="errorMessage"></p>
+                <button onclick="resetProcessor()" class="btn-secondary">
+                    Try Again
+                </button>
+            </div>
+        </div>
+
+        <!-- Help Section -->
+        <div class="panel help-panel" id="helpPanel">
+            <h3>ℹ️ Quick Help & Tips</h3>
+            <div class="help-grid">
+                <article class="help-card">
+                    <span class="help-icon">🧠</span>
+                    <h4>Set up your API key</h4>
+                    <p>Visit <a href="https://platform.openai.com" target="_blank" rel="noopener">platform.openai.com</a>, create a secret key, and paste it into Settings.</p>
+                </article>
+                <article class="help-card">
+                    <span class="help-icon">⏱️</span>
+                    <h4>Know what to expect</h4>
+                    <p>Rewriting a 350-page novel takes 15-20 minutes on average and costs roughly $3-5 in OpenAI credits.</p>
+                </article>
+                <article class="help-card">
+                    <span class="help-icon">🛠️</span>
+                    <h4>Use legacy mode</h4>
+                    <p>No credits? Switch to mechanical chunking for quick, offline-friendly splits.</p>
+                </article>
+                <article class="help-card">
+                    <span class="help-icon">💡</span>
+                    <h4>Optimize word limits</h4>
+                    <p>8 words keeps sentences snappy. Try 10-12 words if the text feels too chopped.</p>
+                </article>
+            </div>
+        </div>
+
+        <footer>
+            <div>
+                <p>French Novel Processor v2.0 • AI Amendment</p>
+                <p class="footer-meta">Developed by Haytham Mokhtari for Stan Jones</p>
+            </div>
+            <div class="footer-links">
+                <a href="https://platform.openai.com/account/usage" target="_blank" rel="noopener">Check OpenAI usage</a>
+                <a href="mailto:support@example.com">Contact support</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
