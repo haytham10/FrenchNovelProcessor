@@ -21,6 +21,7 @@ wheels/
 *.egg
 pip-log.txt
 pip-delete-this-directory.txt
+MANIFEST
 
 # Virtual Environment
 .venv/
@@ -38,36 +39,80 @@ env/
 .project
 .pydevproject
 .settings/
+*.sublime-project
+*.sublime-workspace
 
 # Config files with sensitive data
 config.ini
+.env
+.env.local
+.env.production
+
+# API credentials
+token.json
+credentials.json
 
 # Output files
 output/
+web_interface/output/
 uploads/
+web_interface/uploads/
 *.csv
-*.txt
+*.xlsx
 *.log
 
 # OS
 .DS_Store
 Thumbs.db
 desktop.ini
-
-# API credentials
-token.json
-credentials.json
-.env
-.env.local
+.Spotlight-V100
+.Trashes
 
 # Testing
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
 
 # Temporary files
 *.tmp
 *.bak
 *.swp
 *~
+.cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Documentation build
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Profiling
+*.prof
+*.lprof

@@ -6,10 +6,13 @@ Uses google-genai library with gemini-2.5-flash-lite-preview-09-2025
 
 import os
 import re
+import logging
 from typing import List, Tuple, Optional
 from google import genai
 from google.genai import types
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiRewriter:
@@ -166,7 +169,7 @@ Output format: One sentence per line, no numbering."""
             return cleaned_sentences if cleaned_sentences else [sentence]
             
         except Exception as e:
-            print(f"Gemini rewrite error: {str(e)}")
+            logger.error(f"Gemini rewrite error: {str(e)}")
             raise
     
     def get_current_cost(self) -> float:

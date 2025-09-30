@@ -5,6 +5,7 @@ Orchestrates PDF processing, sentence splitting, and output generation
 
 import os
 import time
+import logging
 from datetime import datetime
 from typing import List, Optional, Callable, Dict, Any
 import pandas as pd
@@ -14,6 +15,8 @@ import pytesseract
 from src.core.sentence_splitter import SentenceSplitter, ProcessingMode, SentenceResult
 from src.utils.config_manager import ConfigManager
 from src.utils.google_sheets import GoogleSheetsManager
+
+logger = logging.getLogger(__name__)
 
 
 class NovelProcessor:
@@ -30,6 +33,8 @@ class NovelProcessor:
         self.results: List[SentenceResult] = []
         self.processing_time = 0
         self.start_time = None
+        # Reference to the active SentenceSplitter while processing
+        self._active_splitter = None
     
     def extract_text_from_pdf(self, pdf_path: str, progress_callback: Optional[Callable] = None) -> str:
         """
@@ -65,7 +70,7 @@ class NovelProcessor:
                 text = self.extract_text_with_ocr(pdf_path, progress_callback)
         
         except Exception as e:
-            print(f"Error extracting text: {str(e)}")
+            logger.error(f"Error extracting text: {str(e)}")
             # Try OCR as fallback
             if progress_callback:
                 progress_callback(0, 0, "Falling back to OCR...")
@@ -99,7 +104,7 @@ class NovelProcessor:
                 text += page_text + "\n"
         
         except Exception as e:
-            print(f"OCR error: {str(e)}")
+            logger.error(f"OCR error: {str(e)}")
             raise Exception(f"Failed to extract text from PDF: {str(e)}")
         
         return text
@@ -153,20 +158,26 @@ class NovelProcessor:
                 api_key = self.config.get_api_key()
                 if progress_callback:
                     progress_callback(45, 100, "Using OpenAI GPT-4o-mini...")
-            
+
             if not api_key:
                 raise Exception("API key required for AI rewriting mode. Please configure it in settings.")
-        
+
+        # Create splitter for the chosen mode (AI or mechanical)
         splitter = SentenceSplitter(word_limit=word_limit, mode=mode, api_key=api_key, use_gemini=use_gemini)
-        
+
         # Process sentences
         if progress_callback:
             progress_callback(50, 100, "Processing sentences...")
-        
-        self.results = splitter.process_text(text, progress_callback)
-        
+
+        # Bind our results list to the splitter's live results so get_summary() can observe
+        # incremental updates while processing.
+        self.results = splitter.results
+        results = splitter.process_text(text, progress_callback)
+        # Ensure final results are the splitter's results
+        self.results = results
+
         self.processing_time = time.time() - self.start_time
-        
+
         return self.results
     
     def generate_dataframe(self) -> pd.DataFrame:
@@ -612,22 +623,61 @@ class NovelProcessor:
         Returns:
             Dictionary with summary statistics
         """
-        total_sentences = len(self.results)
-        direct = sum(1 for r in self.results if r.method == "Direct")
-        ai_rewritten = sum(1 for r in self.results if "AI-Rewritten" in r.method)
-        mechanical = sum(1 for r in self.results if "Mechanical" in r.method)
-        failed = sum(1 for r in self.results if not r.success)
-        
-        total_output_sentences = sum(len(r.output_sentences) for r in self.results)
-        
-        summary = {
-            'total_input_sentences': total_sentences,
-            'total_output_sentences': total_output_sentences,
-            'direct_sentences': direct,
-            'ai_rewritten': ai_rewritten,
-            'mechanical_chunked': mechanical,
-            'failed': failed,
-            'processing_time': self.processing_time
-        }
-        
-        return summary
+        # Prefer live stats from a SentenceSplitter if available
+        try:
+            # If results were produced by a splitter instance, that splitter may have stats
+            # attached via the ai_rewriter or internal counters. Try to use those if present.
+            # Fallback to computing from self.results.
+            total_sentences = len(self.results)
+            direct = sum(1 for r in self.results if r.method == "Direct")
+            ai_rewritten = sum(1 for r in self.results if "AI-Rewritten" in r.method)
+            mechanical = sum(1 for r in self.results if "Mechanical" in r.method)
+            failed = sum(1 for r in self.results if not r.success)
+            total_output_sentences = sum(len(r.output_sentences) for r in self.results)
+
+            summary = {
+                'total_input_sentences': total_sentences,
+                'total_output_sentences': total_output_sentences,
+                'direct_sentences': direct,
+                'ai_rewritten': ai_rewritten,
+                'mechanical_chunked': mechanical,
+                'failed': failed,
+                'processing_time': self.processing_time,
+                # Provide api_calls and cost if available from an AI rewriter
+                'api_calls': 0,
+                'cost': 0.0
+            }
+
+            # If any of the results include ai token stats, accumulate them
+            # Search for ai_rewriter token stats on results (best-effort)
+            for r in self.results:
+                if hasattr(r, 'ai_token_cost'):
+                    try:
+                        summary['cost'] += float(getattr(r, 'ai_token_cost') or 0.0)
+                    except Exception:
+                        pass
+            # Merge live stats from the active splitter if available
+            try:
+                splitter = getattr(self, '_active_splitter', None)
+                if splitter is not None:
+                    sstats = splitter.get_stats() if hasattr(splitter, 'get_stats') else getattr(splitter, 'stats', {})
+                    if isinstance(sstats, dict):
+                        summary['api_calls'] = sstats.get('api_calls', summary.get('api_calls', 0))
+                        # Try a few possible keys for cost
+                        summary['cost'] = sstats.get('cost', sstats.get('token_cost', summary.get('cost', 0.0)))
+            except Exception:
+                pass
+
+            return summary
+
+        except Exception as e:
+            # Fallback simple summary
+            return {
+                'total_input_sentences': len(self.results),
+                'total_output_sentences': sum(len(r.output_sentences) for r in self.results),
+                'direct_sentences': sum(1 for r in self.results if r.method == "Direct"),
+                'ai_rewritten': sum(1 for r in self.results if "AI-Rewritten" in r.method),
+                'mechanical_chunked': sum(1 for r in self.results if "Mechanical" in r.method),
+                'failed': sum(1 for r in self.results if not r.success),
+                'processing_time': self.processing_time
+            }

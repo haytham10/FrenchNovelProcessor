@@ -4,10 +4,13 @@ Handles both AI-powered rewriting and legacy mechanical chunking
 """
 
 import re
+import logging
 from typing import List, Tuple, Optional
 from enum import Enum
 from src.rewriters.ai_rewriter import AIRewriter
 from src.utils.validator import SentenceValidator
+
+logger = logging.getLogger(__name__)
 
 
 class ProcessingMode(Enum):
@@ -71,6 +74,8 @@ class SentenceSplitter:
             'failed': 0,
             'api_calls': 0
         }
+        # Live results list so callers can observe progress incrementally
+        self.results: List[SentenceResult] = []
     
     def count_words(self, text: str) -> int:
         """Count words in text"""
@@ -163,8 +168,8 @@ class SentenceSplitter:
                     )
                 else:
                     # Validation failed - fall back to mechanical chunking
-                    print(f"AI rewrite validation failed: {error_msg}")
-                    print(f"Falling back to mechanical chunking...")
+                    logger.warning(f"AI rewrite validation failed: {error_msg}")
+                    logger.info("Falling back to mechanical chunking")
                     chunks = self.mechanical_chunk(sentence)
                     self.stats['mechanical_chunked'] += 1
                     return SentenceResult(
@@ -178,8 +183,8 @@ class SentenceSplitter:
                     
             except Exception as e:
                 # AI rewriting failed - fall back to mechanical chunking
-                print(f"AI rewriting failed: {str(e)}")
-                print(f"Falling back to mechanical chunking...")
+                logger.error(f"AI rewriting failed: {str(e)}")
+                logger.info("Falling back to mechanical chunking")
                 chunks = self.mechanical_chunk(sentence)
                 self.stats['mechanical_chunked'] += 1
                 return SentenceResult(
@@ -215,16 +220,36 @@ class SentenceSplitter:
             List of SentenceResult objects
         """
         sentences = self.extract_sentences(text)
-        results = []
-        
+
+        # Reset live results for this run - clear the existing list so external
+        # references (e.g. processor.results) remain valid.
+        try:
+            self.results.clear()
+        except Exception:
+            # If results is not yet a list, ensure it's an empty list
+            self.results = []
+
         for i, sentence in enumerate(sentences):
             if progress_callback:
                 progress_callback(i + 1, len(sentences), sentence)
-            
+
             result = self.process_sentence(sentence)
-            results.append(result)
-        
-        return results
+            # Append to live results so external observers (processor) see updates
+            self.results.append(result)
+
+            # Notify again after appending so summaries computed from results include this sentence
+            if progress_callback:
+                # Send a non-string payload so callers treat this as a status update
+                try:
+                    progress_callback(i + 1, len(sentences), {'done': True, 'index': i + 1})
+                except Exception:
+                    # Be tolerant of callbacks that expect strings
+                    try:
+                        progress_callback(i + 1, len(sentences), f'Done {i+1}')
+                    except Exception:
+                        pass
+
+        return self.results
     
     def get_stats(self) -> dict:
         """Get processing statistics"""

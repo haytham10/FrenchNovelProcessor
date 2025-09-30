@@ -1,0 +1,26 @@
+# French Novel Processor - AI Amendment
+# Core Dependencies
+flask==3.0.0
+werkzeug==3.0.1
+google-api-python-client==2.108.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.0
+PyPDF2==3.0.1
+pdf2image==1.16.3
+pytesseract==0.3.10
+pandas==2.1.4
+openpyxl==3.1.2
+
+# AI Integration Dependencies (NEW)
+openai>=1.109.0
+tiktoken==0.5.2
+langdetect==1.0.9
+tenacity==8.2.3
+
+# Gemini AI (Optional - google-genai library)
+google-genai>=0.1.0
+
+# Utility Dependencies
+python-dotenv==1.0.0
+pillow==10.1.0
+tqdm==4.66.1

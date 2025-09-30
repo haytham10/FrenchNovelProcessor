@@ -4,11 +4,19 @@ Flask Web Interface for French Novel Processor
 
 import os
 import sys
+import logging
 from flask import Flask, render_template, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 import threading
 import time
 from datetime import datetime
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -220,7 +228,7 @@ def process_pdf_async(pdf_path: str, word_limit: int, processing_mode: str):
             processing_status['google_sheets_id'] = sheets_result['spreadsheet_id']
             processing_status['status_message'] = 'Google Spreadsheet created successfully!'
         except Exception as e:
-            print(f"Google Sheets error: {str(e)}")
+            logger.error(f"Google Sheets error: {str(e)}")
             processing_status['google_sheets_error'] = str(e)
             processing_status['status_message'] = 'Local files created (Google Sheets failed)'
         
@@ -238,7 +246,7 @@ def process_pdf_async(pdf_path: str, word_limit: int, processing_mode: str):
         processing_status['error'] = str(e)
         processing_status['is_processing'] = False
         processing_status['status_message'] = f'Error: {str(e)}'
-        print(f"Processing error: {str(e)}")
+        logger.error(f"Processing error: {str(e)}")
         import traceback
         traceback.print_exc()
 
@@ -298,12 +306,12 @@ def download_file(filename):
 
 
 if __name__ == '__main__':
-    print("=" * 60)
-    print("French Novel Processor - Web Interface")
-    print("=" * 60)
-    print("\nStarting server...")
-    print("Open your browser to: http://localhost:5000")
-    print("\nPress Ctrl+C to stop the server")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("French Novel Processor - Web Interface")
+    logger.info("=" * 60)
+    logger.info("Starting server...")
+    logger.info("Open your browser to: http://localhost:5000")
+    logger.info("Press Ctrl+C to stop the server")
+    logger.info("=" * 60)
     
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)

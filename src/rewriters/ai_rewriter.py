@@ -5,10 +5,13 @@ Uses OpenAI GPT-4o-mini to intelligently rewrite long French sentences
 
 import os
 import re
+import logging
 from typing import List, Tuple, Optional
 from openai import OpenAI
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 import tiktoken
+
+logger = logging.getLogger(__name__)
 
 
 class AIRewriter:
@@ -153,7 +156,7 @@ Output format: One sentence per line, no numbering."""
             return cleaned_sentences if cleaned_sentences else [sentence]
             
         except Exception as e:
-            print(f"AI rewrite error: {str(e)}")
+            logger.error(f"AI rewrite error: {str(e)}")
             raise
     
     def get_current_cost(self) -> float:

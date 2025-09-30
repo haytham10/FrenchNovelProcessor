@@ -425,12 +425,12 @@ function updateProgress(status) {
     
     // Update stats with enhanced formatting
     if (status.stats) {
-        document.getElementById('statTotal').textContent = status.stats.total_input_sentences || 0;
-        document.getElementById('statDirect').textContent = status.stats.direct_sentences || 0;
-        document.getElementById('statAI').textContent = status.stats.ai_rewritten || 0;
-        document.getElementById('statAPICalls').textContent = status.stats.api_calls || 0;
+    document.getElementById('statTotal').textContent = status.stats.total_input_sentences || 0;
+    document.getElementById('statDirect').textContent = status.stats.direct_sentences || 0;
+    document.getElementById('statAI').textContent = status.stats.ai_rewritten || 0;
+    document.getElementById('statAPICalls').textContent = status.stats.api_calls || 0;
         
-        const cost = status.stats.cost || 0;
+    const cost = status.stats.cost || 0;
         const costElem = document.getElementById('statCost');
         costElem.textContent = '$' + cost.toFixed(4);
         

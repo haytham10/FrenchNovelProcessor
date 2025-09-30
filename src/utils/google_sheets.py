@@ -5,12 +5,15 @@ Handles authentication and spreadsheet creation using Google Sheets API
 
 import os
 import pickle
+import logging
 from typing import List, Dict, Any, Optional
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
+logger = logging.getLogger(__name__)
 
 # If modifying these scopes, delete the file token.json
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 
@@ -41,8 +44,8 @@ class GoogleSheetsManager:
             try:
                 self.creds = Credentials.from_authorized_user_file(self.token_path, SCOPES)
             except Exception as e:
-                print(f"Warning: Could not load token.json: {e}")
-                print("Deleting token.json and re-authenticating...")
+                logger.warning(f"Could not load token.json: {e}")
+                logger.info("Deleting token.json and re-authenticating...")
                 os.remove(self.token_path)
                 self.creds = None
         
@@ -97,7 +100,7 @@ class GoogleSheetsManager:
                 'spreadsheet_url': spreadsheet.get('spreadsheetUrl')
             }
         except HttpError as error:
-            print(f"An error occurred: {error}")
+            logger.error(f"An error occurred: {error}")
             raise
     
     def write_data(self, spreadsheet_id: str, sheet_name: str, data: List[List[Any]], 
@@ -124,7 +127,7 @@ class GoogleSheetsManager:
                 body=body
             ).execute()
         except HttpError as error:
-            print(f"An error occurred: {error}")
+            logger.error(f"An error occurred: {error}")
             raise
     
     def create_sheet(self, spreadsheet_id: str, sheet_name: str, 
@@ -160,7 +163,7 @@ class GoogleSheetsManager:
                 body=body
             ).execute()
         except HttpError as error:
-            print(f"An error occurred: {error}")
+            logger.error(f"An error occurred: {error}")
             raise
     
     def format_sheet(self, spreadsheet_id: str, sheet_id: int, formatting_requests: List[Dict]):
@@ -182,7 +185,7 @@ class GoogleSheetsManager:
                 body=body
             ).execute()
         except HttpError as error:
-            print(f"An error occurred: {error}")
+            logger.error(f"An error occurred: {error}")
             raise
     
     def get_sheet_id(self, spreadsheet_id: str, sheet_name: str) -> Optional[int]:
@@ -207,7 +210,7 @@ class GoogleSheetsManager:
             
             return None
         except HttpError as error:
-            print(f"An error occurred: {error}")
+            logger.error(f"An error occurred: {error}")
             raise
     
     def set_column_widths(self, spreadsheet_id: str, sheet_id: int, 
