@@ -383,19 +383,47 @@ function startStatusPolling() {
 
 // Update progress display
 function updateProgress(status) {
-    // Update progress bar
-    document.getElementById('progressFill').style.width = status.progress + '%';
-    document.getElementById('progressText').textContent = status.progress + '%';
+    // Update progress bar with smooth animation
+    const progressFill = document.getElementById('progressFill');
+    progressFill.style.width = status.progress + '%';
     
-    // Update status message
-    document.getElementById('statusMessage').textContent = status.status_message;
-    
-    // Update current sentence if available
-    if (status.current_sentence) {
-        document.getElementById('currentSentence').textContent = `Current: "${status.current_sentence}"`;
+    // Add color indication based on progress
+    if (status.progress < 30) {
+        progressFill.style.background = 'linear-gradient(90deg, #3b82f6, #60a5fa)';
+    } else if (status.progress < 80) {
+        progressFill.style.background = 'linear-gradient(90deg, #8b5cf6, #a78bfa)';
+    } else {
+        progressFill.style.background = 'linear-gradient(90deg, #10b981, #34d399)';
     }
     
-    // Update stats
+    document.getElementById('progressText').textContent = status.progress + '%';
+    
+    // Enhanced status message with better formatting
+    let statusMsg = status.status_message || 'Processing...';
+    
+    // Add contextual info
+    if (status.stats) {
+        const total = status.stats.total_input_sentences || 0;
+        const processed = (status.stats.direct_sentences || 0) + (status.stats.ai_rewritten || 0);
+        if (total > 0 && processed < total) {
+            statusMsg += ` (${processed}/${total} sentences)`;
+        }
+    }
+    
+    document.getElementById('statusMessage').textContent = statusMsg;
+    
+    // Update current sentence with truncation for long sentences
+    if (status.current_sentence) {
+        let sentence = status.current_sentence;
+        if (sentence.length > 80) {
+            sentence = sentence.substring(0, 77) + '...';
+        }
+        document.getElementById('currentSentence').textContent = `📝 ${sentence}`;
+        document.getElementById('currentSentence').style.fontStyle = 'italic';
+        document.getElementById('currentSentence').style.color = '#6b7280';
+    }
+    
+    // Update stats with enhanced formatting
     if (status.stats) {
         document.getElementById('statTotal').textContent = status.stats.total_input_sentences || 0;
         document.getElementById('statDirect').textContent = status.stats.direct_sentences || 0;
@@ -403,12 +431,35 @@ function updateProgress(status) {
         document.getElementById('statAPICalls').textContent = status.stats.api_calls || 0;
         
         const cost = status.stats.cost || 0;
-        document.getElementById('statCost').textContent = '$' + cost.toFixed(2);
+        const costElem = document.getElementById('statCost');
+        costElem.textContent = '$' + cost.toFixed(4);
         
-        // Update time
+        // Color code cost based on amount
+        if (cost === 0) {
+            costElem.style.color = '#6b7280';
+        } else if (cost < 0.50) {
+            costElem.style.color = '#10b981';
+        } else if (cost < 2.0) {
+            costElem.style.color = '#f59e0b';
+        } else {
+            costElem.style.color = '#ef4444';
+        }
+        
+        // Update time with ETA if possible
         const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        document.getElementById('statTime').textContent = formatTime(elapsed);
+        const timeElem = document.getElementById('statTime');
+        timeElem.textContent = formatTime(elapsed);
+        
+        // Calculate ETA if we have progress
+        if (status.progress > 5 && status.progress < 95) {
+            const rate = status.progress / elapsed;
+            const remaining = (100 - status.progress) / rate;
+            if (remaining > 0 && remaining < 3600) { // Less than 1 hour
+                timeElem.textContent += ` (ETA: ${formatTime(Math.floor(remaining))})`;
+            }
+        }
 
+        // Update stage indicator
         let nextStage = 'analyzing';
         if (status.stats.ai_rewritten > 0 || status.progress >= 30) {
             nextStage = 'rewriting';
@@ -564,7 +615,7 @@ function showResults(status) {
     
     // Generate summary
     const stats = status.stats;
-    const summaryHTML = `
+    let summaryHTML = `
         <div class="summary-item">
             <span class="summary-label">Total sentences processed:</span>
             <span class="summary-value">${stats.total_input_sentences || 0}</span>
@@ -594,6 +645,25 @@ function showResults(status) {
             <span class="summary-value">${formatTime(Math.floor(stats.processing_time || 0))}</span>
         </div>
     `;
+    
+    // Add Google Sheets link if available
+    if (status.google_sheets_url) {
+        summaryHTML += `
+        <div class="summary-item" style="grid-column: 1 / -1; background: linear-gradient(135deg, #34a853 0%, #0f9d58 100%); padding: 15px; border-radius: 8px; margin-top: 10px;">
+            <span class="summary-label" style="color: white; font-weight: bold;">📊 Google Spreadsheet:</span>
+            <a href="${status.google_sheets_url}" target="_blank" style="color: white; text-decoration: underline; font-weight: bold;">
+                Open in Google Sheets →
+            </a>
+        </div>
+        `;
+    } else if (status.google_sheets_error) {
+        summaryHTML += `
+        <div class="summary-item" style="grid-column: 1 / -1; background: #fef3c7; padding: 15px; border-radius: 8px; margin-top: 10px;">
+            <span class="summary-label" style="color: #92400e;">⚠️ Google Sheets:</span>
+            <span style="color: #92400e;">Not created (${status.google_sheets_error})</span>
+        </div>
+        `;
+    }
     
     document.getElementById('summaryGrid').innerHTML = summaryHTML;
     const resetBtn = document.getElementById('resetBtn');

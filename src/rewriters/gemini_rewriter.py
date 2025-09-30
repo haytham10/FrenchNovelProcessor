@@ -102,8 +102,8 @@ Rewrite this French sentence into multiple shorter sentences, each containing {s
 Output format: One sentence per line, no numbering."""
     
     @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
+        stop=stop_after_attempt(5),  # Increased from 3 to 5 attempts
+        wait=wait_exponential(multiplier=2, min=4, max=30),  # Longer waits: 4s, 8s, 16s, 30s
         retry=retry_if_exception_type((Exception,))
     )
     def rewrite_sentence(self, sentence: str) -> List[str]:

@@ -190,6 +190,28 @@ def process_pdf_async(pdf_path: str, word_limit: int, processing_mode: str):
         excel_path = os.path.join(app.config['OUTPUT_FOLDER'], f'{base_name}_{timestamp}.xlsx')
         processor.save_to_excel(excel_path)
         
+        # Save to Google Sheets
+        processing_status['status_message'] = 'Creating Google Spreadsheet...'
+        processing_status['progress'] = 97
+        
+        try:
+            credentials_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'credentials.json')
+            token_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'token.json')
+            
+            sheets_result = processor.save_to_google_sheets(
+                title=f'{base_name}_{timestamp}',
+                credentials_path=credentials_path,
+                token_path=token_path
+            )
+            
+            processing_status['google_sheets_url'] = sheets_result['spreadsheet_url']
+            processing_status['google_sheets_id'] = sheets_result['spreadsheet_id']
+            processing_status['status_message'] = 'Google Spreadsheet created successfully!'
+        except Exception as e:
+            print(f"Google Sheets error: {str(e)}")
+            processing_status['google_sheets_error'] = str(e)
+            processing_status['status_message'] = 'Local files created (Google Sheets failed)'
+        
         # Get final summary
         summary = processor.get_summary()
         processing_status['stats'] = summary

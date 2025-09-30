@@ -158,7 +158,32 @@ This will:
 4. Copy the key
 5. Free tier available: 15 requests/min, 1500 requests/day
 
-### 3. Run the Application
+### 3. Setup Google Sheets API (for Cloud Output)
+
+**Enable Google Sheets Integration:**
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project (or select existing)
+3. Enable **Google Sheets API** and **Google Drive API**:
+   - Click "Enable APIs and Services"
+   - Search for "Google Sheets API" → Enable
+   - Search for "Google Drive API" → Enable
+4. Create OAuth 2.0 Credentials:
+   - Go to **APIs & Services** → **Credentials**
+   - Click **Create Credentials** → **OAuth client ID**
+   - Select **Desktop app** as application type
+   - Download credentials as `credentials.json`
+   - Place in project root directory
+5. First run will open browser for authorization
+   - Authorize the application
+   - `token.json` will be created automatically
+
+**Your files should include:**
+- ✅ `credentials.json` - OAuth client credentials (from Google Cloud)
+- ✅ `token.json` - Generated after first authorization (auto-created)
+
+**Note:** Google Sheets output is optional. If not configured, you'll still get local Excel and CSV files.
+
+### 4. Run the Application
 
 ```bash
 scripts\run_application.bat
@@ -217,7 +242,45 @@ Creates a detailed log of all rewrites and any issues.
 
 ## 📊 Output Format
 
-### Main Sheet: "Sentences"
+### 📊 Google Sheets Output (NEW!)
+
+The application now **automatically creates a Google Spreadsheet** with your results! 
+
+**Features:**
+- 🎨 **Beautiful Formatting** - Color-coded headers and rows
+- ☁️ **Cloud-Based** - Access from anywhere, share easily
+- 🔄 **Real-Time** - Opens immediately after processing
+- 📱 **Responsive** - Works on desktop, tablet, and mobile
+- 🔗 **Shareable** - Generate share links for collaboration
+
+**Three Sheets:**
+1. **Sentences** - Main results with color-coded rows
+   - Green: AI-rewritten sentences
+   - Orange: Mechanical chunked sentences
+   - White: Direct sentences (≤8 words)
+
+2. **Processing Log** - Detailed processing information (if enabled)
+
+3. **Summary** - Statistics and metrics
+   - Total sentences processed
+   - AI vs mechanical breakdown
+   - Processing time and cost
+
+### 📁 Local Files
+
+You also get local files for offline access:
+
+**Excel File (.xlsx)**
+- Same beautiful formatting as Google Sheets
+- Color-coded rows by method
+- Multiple sheets with data and summary
+
+**CSV File (.csv)**
+- Simple text format
+- Easy to import into other tools
+- No formatting, just data
+
+### Column Structure
 
 | Column | Description |
 |--------|-------------|
@@ -226,14 +289,6 @@ Creates a detailed log of all rewrites and any issues.
 | Original | Original sentence (if rewritten) |
 | Method | How it was processed (Direct/AI-Rewritten/Mechanical) |
 | Word_Count | Number of words in output sentence |
-
-### Processing Log Sheet (optional)
-
-Detailed information about:
-- Which sentences required rewriting
-- API calls made
-- Any errors or validation issues
-- Processing statistics
 
 ---
 

@@ -12,7 +12,13 @@ Start here if you're new to the project:
    - Feature overview
    - Requirements and dependencies
 
-2. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Quick reference guide
+2. **[GOOGLE_SHEETS_SETUP.md](GOOGLE_SHEETS_SETUP.md)** - Google Sheets integration setup 🆕
+   - Step-by-step OAuth setup
+   - API enablement guide
+   - Troubleshooting
+   - Security notes
+
+3. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Quick reference guide
    - Command cheat sheet
    - Common tasks
    - Troubleshooting quick fixes
@@ -66,6 +72,7 @@ Start here if you're new to the project:
 | I want to... | Read this... |
 |--------------|--------------|
 | Install the application | [README.md](../README.md) → Quick Start |
+| Setup Google Sheets output | [GOOGLE_SHEETS_SETUP.md](GOOGLE_SHEETS_SETUP.md) 🆕 |
 | Run the web interface | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) → Command Line |
 | Configure API keys | [README.md](../README.md) → Configure API Key |
 | Process a PDF | [README.md](../README.md) → Process Your First Novel |
