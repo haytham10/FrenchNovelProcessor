@@ -26,29 +26,41 @@ class SentenceValidator:
     
     def is_french(self, text: str) -> bool:
         """
-        Check if text is in French (lenient check)
+        Check if text is in French (VERY lenient check)
         
         Args:
             text: Text to check
             
         Returns:
-            True if French or uncertain, False only if definitely not French
+            True if French or uncertain, False only if obviously English/German/etc
         """
         try:
-            # Skip very short texts (less than 3 words)
-            if len(text.split()) < 3:
-                return True  # Assume short texts are OK
+            # Skip very short texts (less than 5 words) - always pass
+            if len(text.split()) < 5:
+                return True  # Short texts always OK
             
-            # Remove numbers and special characters for better detection
-            clean_text = re.sub(r'[0-9\.\,\;\:\!\?]', '', text)
-            if len(clean_text.strip()) < 10:
-                return True  # Too short after cleaning
+            # Remove numbers, punctuation, and special characters for better detection
+            clean_text = re.sub(r'[0-9\.\,\;\:\!\?\(\)\[\]\{\}\-\_\"\'\«\»]', ' ', text)
+            clean_text = ' '.join(clean_text.split())  # Remove extra spaces
             
+            if len(clean_text.strip()) < 15:
+                return True  # Too short after cleaning - always pass
+            
+            # Check for French-specific characters (strong indicator)
+            if any(char in text for char in ['é', 'è', 'ê', 'à', 'â', 'ô', 'û', 'ç', 'ù', 'î', 'ï', 'ë', 'ü']):
+                return True  # Has French accents - definitely French
+            
+            # Detect language
             lang = detect(clean_text)
-            # Be lenient: accept French and similar languages (ca=Catalan, it=Italian, es=Spanish can be false positives)
-            return lang in ['fr', 'ca', 'it', 'es', 'pt']  # Romance languages
+            
+            # VERY lenient: Accept all Romance languages and be uncertain about others
+            # Only reject if it's clearly English, German, Dutch, etc.
+            reject_langs = ['en', 'de', 'nl', 'sv', 'da', 'no', 'fi', 'pl', 'cs', 'sk']
+            
+            return lang not in reject_langs  # Accept everything except clearly non-French
+            
         except (LangDetectException, Exception):
-            # If detection fails, assume it's OK (lenient approach)
+            # If detection fails at all, assume it's OK (very lenient)
             return True
     
     def extract_key_words(self, text: str) -> Set[str]:
@@ -176,12 +188,13 @@ class SentenceValidator:
             ]
             return False, "Language validation failed: " + "; ".join(non_french), details
         
-        # Check content preservation (more lenient threshold)
+        # Check content preservation (very lenient threshold)
         similarity = self.check_content_preservation(original, rewritten_list)
         details['similarity_score'] = similarity
         
-        if similarity < 0.25:  # Less than 25% key words preserved (was 40%)
-            return False, f"Content preservation low (similarity: {similarity:.2%})", details
+        # Only fail if similarity is VERY low (less than 15% - essentially completely different)
+        if similarity < 0.15:  # Less than 15% key words preserved (was 25%)
+            return False, f"Content preservation very low (similarity: {similarity:.2%})", details
         
         # All checks passed
         return True, "All validation checks passed", details

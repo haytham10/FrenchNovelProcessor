@@ -158,9 +158,21 @@ def process_pdf_async(pdf_path: str, word_limit: int, processing_mode: str):
         processor = NovelProcessor(config_manager)
         
         # Progress callback
-        def progress_callback(current, total, message):
+        def progress_callback(current, total, message_or_sentence):
             processing_status['progress'] = int((current / total) * 100) if total > 0 else 0
-            processing_status['status_message'] = message
+            
+            # Handle both message strings and sentence objects
+            if isinstance(message_or_sentence, str):
+                # Check if it looks like a sentence (not a status message)
+                if len(message_or_sentence) > 20 and not message_or_sentence.endswith('...'):
+                    processing_status['current_sentence'] = message_or_sentence
+                    processing_status['status_message'] = f'Processing sentence {current}/{total}'
+                else:
+                    processing_status['status_message'] = message_or_sentence
+                    processing_status['current_sentence'] = ''
+            else:
+                processing_status['status_message'] = f'Processing sentence {current}/{total}'
+                processing_status['current_sentence'] = ''
             
             # Update stats if available
             if hasattr(processor, 'results'):
