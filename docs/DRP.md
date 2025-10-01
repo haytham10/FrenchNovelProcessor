@@ -42,14 +42,15 @@ Replace mechanical chunking algorithm with AI-powered intelligent sentence rewri
 
 ### **2.1 AI Integration**
 
-#### **Primary Option: OpenAI GPT-4o-mini**
+#### **Primary Option: OpenAI GPT-5 nano**
 - **API:** OpenAI Chat Completions API
-- **Model:** `gpt-4o-mini` (cost-effective, fast, excellent for French)
-- **Estimated cost per novel:** $2-5 depending on length
-- **Processing time:** 15-20 minutes for 350-page novel
+- **Model:** `gpt-5-nano` (fastest, cheapest, excellent for French)
+- **Estimated cost per novel:** $0.50-1 depending on length
+- **Processing time:** 10-15 minutes for 350-page novel
 
-#### **Backup Option: Anthropic Claude**
-- **API:** Claude 3 Haiku (if client prefers)
+#### **Backup Option: Google Gemini**
+- **API:** Gemini 2.5 Flash Lite
+- **Free tier available**
 - **Similar pricing and performance**
 
 #### **API Key Management**
@@ -351,29 +352,29 @@ If AI fails for any sentence after retries:
 
 ### **7.1 Cost Estimation**
 
-**OpenAI GPT-4o-mini Pricing:**
-- Input: $0.150 per 1M tokens
-- Output: $0.600 per 1M tokens
+**OpenAI GPT-5 nano Pricing:**
+- Input: $0.05 per 1M tokens (~70% cheaper than GPT-4o-mini)
+- Output: $0.40 per 1M tokens (~33% cheaper than GPT-4o-mini)
 
 **Typical 350-page novel:**
 - Estimated sentences needing rewrite: ~2,500
 - Average tokens per sentence: 30 input, 40 output
 - Total tokens: 75,000 input + 100,000 output
-- **Cost: ~$2.50-$5.00 per novel**
+- **Cost: ~$0.50-$1.00 per novel**
 
 ### **7.2 Cost Display**
 
 Show cost estimates:
-- **Before processing:** "Estimated cost: $3-5"
-- **During processing:** "Current cost: $2.10"
-- **After processing:** "Total cost: $3.20"
+- **Before processing:** "Estimated cost: $0.50-1"
+- **During processing:** "Current cost: $0.35"
+- **After processing:** "Total cost: $0.75"
 
 ### **7.3 Cost Optimization**
 
 - Batch multiple sentences per API call when possible
 - Cache common rewrites
 - Only send to AI if sentence >word_limit
-- Use smallest effective model (gpt-4o-mini)
+- Use GPT-5 nano (fastest & cheapest)
 
 ---
 

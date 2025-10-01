@@ -17,29 +17,29 @@ logger = logging.getLogger(__name__)
 class AIRewriter:
     """Handles AI-powered sentence rewriting using OpenAI API"""
     
-    def __init__(self, api_key: str, word_limit: int = 8, model: str = "gpt-4o-mini"):
+    def __init__(self, api_key: str, word_limit: int = 8, model: str = "gpt-5-nano"):
         """
         Initialize the AI Rewriter
         
         Args:
             api_key: OpenAI API key
             word_limit: Maximum words per sentence
-            model: OpenAI model to use (default: gpt-4o-mini)
+            model: OpenAI model to use (default: gpt-5-nano)
         """
         self.client = OpenAI(api_key=api_key)
         self.word_limit = word_limit
         self.model = model
         self.total_input_tokens = 0
         self.total_output_tokens = 0
-        # Use cl100k_base encoding for GPT-4o models
+        # Use cl100k_base encoding for GPT-5 models
         try:
-            self.encoding = tiktoken.encoding_for_model("gpt-4o")
+            self.encoding = tiktoken.encoding_for_model("gpt-5-nano")
         except:
             self.encoding = tiktoken.get_encoding("cl100k_base")
         
-        # Pricing per 1M tokens (as of 2025)
-        self.input_price_per_1m = 0.150
-        self.output_price_per_1m = 0.600
+        # Pricing per 1M tokens (GPT-5 nano - as of 2025)
+        self.input_price_per_1m = 0.05
+        self.output_price_per_1m = 0.40
     
     def validate_api_key(self) -> Tuple[bool, str]:
         """

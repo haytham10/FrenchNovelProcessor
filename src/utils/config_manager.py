@@ -71,11 +71,25 @@ class ConfigManager:
         except:
             return None
     
+    def get_openai_model(self) -> str:
+        """Get OpenAI model"""
+        try:
+            return self.config.get('OpenAI', 'model', fallback='gpt-5-nano')
+        except:
+            return 'gpt-5-nano'
+    
     def set_api_key(self, api_key: str):
         """Set OpenAI API key"""
         if 'OpenAI' not in self.config:
             self.config['OpenAI'] = {}
         self.config['OpenAI']['api_key'] = api_key
+        self.save_config()
+    
+    def set_openai_model(self, model: str):
+        """Set OpenAI model"""
+        if 'OpenAI' not in self.config:
+            self.config['OpenAI'] = {}
+        self.config['OpenAI']['model'] = model
         self.save_config()
     
     def get_word_limit(self) -> int:

@@ -46,7 +46,7 @@ That's it! Drop a PDF, click process, and download results. 📥➡️✂️➡�
 ## 🌟 Features
 
 ### Core Capabilities
-- 🤖 **AI-Powered Rewriting** - Intelligent sentence restructuring using OpenAI GPT-4o-mini or Google Gemini
+- 🤖 **AI-Powered Rewriting** - Intelligent sentence restructuring using OpenAI GPT-5 nano or Google Gemini
 - 📄 **PDF Processing** - Extract text from PDFs with OCR support for scanned documents
 - ✂️ **Smart Splitting** - Break long sentences into grammatically correct shorter ones
 - 🌍 **French Language** - Optimized for French grammar and syntax
@@ -54,7 +54,7 @@ That's it! Drop a PDF, click process, and download results. 📥➡️✂️➡�
 - 📊 **Excel/CSV Export** - Professional output with original/rewritten comparisons
 
 ### AI Provider Options
-- **OpenAI GPT-4o-mini** - High quality, production-ready ($2-5 per novel)
+- **OpenAI GPT-5 nano** - Fastest & cheapest, recommended for production ($0.50-1 per novel)
 - **Google Gemini 2.5 Flash Lite** - Cost-effective alternative with free tier
 - **Legacy Mode** - Mechanical chunking without AI (offline, free)
 
@@ -69,7 +69,7 @@ That's it! Drop a PDF, click process, and download results. 📥➡️✂️➡�
 ## 🌟 What's New in Version 2.0
 
 **Major Improvements:**
-- ✨ **AI Integration** - OpenAI GPT-4o-mini and Google Gemini support
+- ✨ **AI Integration** - OpenAI GPT-5 nano and Google Gemini support
 - 🏗️ **Code Organization** - Professional package structure with comprehensive documentation
 - 📚 **Complete Documentation** - Guides for users, developers, and maintainers
 - 🧪 **Full Test Coverage** - Comprehensive test suite
@@ -113,9 +113,9 @@ Instead of mechanically chunking sentences into awkward 8-word pieces, version 2
 Choose one of the following AI providers:
 
 - **OpenAI API Key** ([Get yours here](https://platform.openai.com))
-  - Model: GPT-4o-mini
-  - Typical cost: $2-5 per 350-page novel
-  - High quality, production-ready
+  - Model: GPT-5 nano
+  - Typical cost: $0.50-1 per 350-page novel
+  - Fastest & cheapest, recommended for production
   
 - **Google Gemini API Key** ([Get yours here](https://aistudio.google.com/apikey))
   - Model: Gemini 2.5 Flash Lite
@@ -216,11 +216,11 @@ The web interface will open at `http://localhost:5000`
 ### Processing Modes
 
 **🤖 AI-Powered Rewriting (Recommended)**
-- Uses OpenAI GPT-4o-mini to intelligently rewrite long sentences
+- Uses OpenAI GPT-5 nano to intelligently rewrite long sentences
 - Preserves grammar, meaning, and uses original words
 - Requires API key and internet connection
-- Cost: ~$2-5 per 350-page novel
-- Time: 15-20 minutes
+- Cost: ~$0.50-1 per 350-page novel
+- Time: 10-15 minutes (faster than GPT-4o-mini)
 
 **⚙️ Mechanical Chunking (Legacy)**
 - Simple word-based splitting (original behavior)
@@ -294,13 +294,13 @@ You also get local files for offline access:
 
 ## 💰 Cost Information
 
-### OpenAI Pricing (GPT-4o-mini)
-- **Input**: $0.150 per 1M tokens
-- **Output**: $0.600 per 1M tokens
+### OpenAI Pricing (GPT-5 nano)
+- **Input**: $0.05 per 1M tokens (~70% cheaper than GPT-4o-mini)
+- **Output**: $0.40 per 1M tokens (~33% cheaper than GPT-4o-mini)
 - **Typical Costs**:
-  - 350-page novel: $2-5
-  - 500-page novel: $6-8
-  - Short story (50 pages): $0.50-1
+  - 350-page novel: $0.50-1
+  - 500-page novel: $1.50-2
+  - Short story (50 pages): $0.10-0.25
 
 ### Google Gemini Pricing (2.5 Flash Lite)
 - **Input**: $0.10 per 1M tokens
@@ -312,11 +312,11 @@ You also get local files for offline access:
   - Short story (50 pages): $0.20-0.50
 
 ### Cost Comparison
-| Feature | OpenAI | Gemini | Mechanical |
-|---------|--------|--------|------------|
-| Quality | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ |
-| Speed | Fast | Fast | Very Fast |
-| Cost (350pg) | $2-5 | $1-3 | Free |
+| Feature | OpenAI GPT-5 nano | Gemini | Mechanical |
+|---------|-------------------|--------|------------|
+| Quality | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ |
+| Speed | Very Fast ⚡⚡⚡⚡⚡ | Fast | Very Fast |
+| Cost (350pg) | $0.50-1 | $1-3 | Free |
 | Free Tier | No | Yes | N/A |
 | Offline | No | No | Yes |
 
@@ -387,7 +387,7 @@ FrenchNovelProcessor/
 │   │   ├── processor.py          # PDF processing & OCR
 │   │   └── sentence_splitter.py  # Sentence processing logic
 │   ├── rewriters/                # AI integration modules
-│   │   ├── ai_rewriter.py        # OpenAI GPT-4o-mini
+│   │   ├── ai_rewriter.py        # OpenAI GPT-5 nano
 │   │   └── gemini_rewriter.py    # Google Gemini 2.5 Flash Lite
 │   └── utils/                    # Utility modules
 │       ├── config_manager.py     # Configuration management
@@ -437,11 +437,11 @@ For detailed architecture and development info, see:
 <details>
 <summary><b>Which AI provider should I choose?</b></summary>
 
-- **OpenAI GPT-4o-mini**: Best quality, slightly higher cost ($2-5 per novel)
-- **Google Gemini**: Great quality, lower cost, has free tier ($1-3 per novel or free)
+- **OpenAI GPT-5 nano**: Fastest & cheapest, recommended for production ($0.50-1 per novel)
+- **Google Gemini**: Great quality, free tier available ($1-3 per novel or free)
 - **Mechanical Mode**: No AI, fastest, free, but less natural results
 
-**Recommendation**: Start with Gemini's free tier to test, upgrade to OpenAI for production.
+**Recommendation**: GPT-5 nano for production. Use Gemini's free tier for testing/development.
 </details>
 
 <details>
@@ -553,7 +553,7 @@ Proprietary software developed for Stan Jones.
 
 **Client**: Stan Jones  
 **Developer**: Haytham Mokhtari  
-**AI Model**: OpenAI GPT-4o-mini  
+**AI Model**: OpenAI GPT-5 nano  
 **Project Type**: Amendment to existing tool  
 **Delivery Date**: October 3, 2025
 

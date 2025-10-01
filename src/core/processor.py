@@ -156,8 +156,9 @@ class NovelProcessor:
                     progress_callback(45, 100, "Using Gemini AI (Development Mode)...")
             else:
                 api_key = self.config.get_api_key()
+                model = self.config.get_openai_model()
                 if progress_callback:
-                    progress_callback(45, 100, "Using OpenAI GPT-4o-mini...")
+                    progress_callback(45, 100, f"Using OpenAI {model}...")
 
             if not api_key:
                 raise Exception("API key required for AI rewriting mode. Please configure it in settings.")

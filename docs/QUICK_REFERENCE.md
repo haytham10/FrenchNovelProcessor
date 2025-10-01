@@ -54,15 +54,15 @@ use_gemini_dev = false
 | Mode | Description | Use Case |
 |------|-------------|----------|
 | `mechanical` | 8-word chunks | Fast, no API needed |
-| `ai_rewrite` | OpenAI GPT-4o-mini | High quality rewriting |
-| `gemini_rewrite` | Gemini 2.5 Flash Lite | Cost-effective AI |
+| `ai_rewrite` | OpenAI GPT-5 nano | High quality, fastest & cheapest |
+| `gemini_rewrite` | Gemini 2.5 Flash Lite | Free tier available |
 
 ## Cost Estimates
 
-### OpenAI (GPT-4o-mini)
-- Input: $0.150 per 1M tokens
-- Output: $0.600 per 1M tokens
-- Typical novel (350 pages): $2-5
+### OpenAI (GPT-5 nano)
+- Input: $0.05 per 1M tokens
+- Output: $0.40 per 1M tokens
+- Typical novel (350 pages): $0.50-1
 
 ### Gemini (2.5 Flash Lite)
 - Input: $0.10 per 1M tokens

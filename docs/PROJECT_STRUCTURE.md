@@ -65,7 +65,7 @@ The source code is organized into logical packages:
 - **sentence_splitter.py** - SentenceSplitter class: Handles sentence splitting and rewriting logic
 
 #### AI Rewriters (`src/rewriters/`)
-- **ai_rewriter.py** - AIRewriter class: OpenAI GPT-4o-mini integration
+- **ai_rewriter.py** - AIRewriter class: OpenAI GPT-5 nano integration
 - **gemini_rewriter.py** - GeminiRewriter class: Google Gemini 2.5 Flash Lite integration
 
 #### Utilities (`src/utils/`)
@@ -114,7 +114,7 @@ The application uses `config.ini` for configuration:
 ## API Options
 
 The application supports two AI providers:
-- **OpenAI** (GPT-4o-mini) - Production-ready, high quality
-- **Gemini** (2.5 Flash Lite) - Cost-effective alternative
+- **OpenAI** (GPT-5 nano) - Fastest & cheapest, recommended for production
+- **Gemini** (2.5 Flash Lite) - Free tier available
 
 Users can switch between providers in the settings.

@@ -5,9 +5,9 @@ All notable changes to this project will be documented in this file.
 ## [2.0.0] - 2025-10-03
 
 ### Added - AI Amendment
-- **AI-Powered Sentence Rewriting**: Integrated OpenAI GPT-4o-mini for intelligent sentence rewriting
+- **AI-Powered Sentence Rewriting**: Integrated OpenAI GPT-5 nano for intelligent sentence rewriting
 - **Configuration Manager**: New `config_manager.py` for managing settings and API keys
-- **AI Rewriter Module**: New `ai_rewriter.py` with OpenAI integration, retry logic, and cost tracking
+- **AI Rewriter Module**: New `ai_rewriter.py` with OpenAI GPT-5 nano integration, retry logic, and cost tracking
 - **Validation System**: New `validator.py` for quality checking rewritten sentences
   - Word count validation
   - French language detection
