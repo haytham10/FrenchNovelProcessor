@@ -1,6 +1,7 @@
 """
 Sentence Splitter Module
 Handles both AI-powered rewriting and legacy mechanical chunking
+Optimized with adaptive batching and caching for improved performance
 """
 
 import re
@@ -10,6 +11,7 @@ from enum import Enum
 from src.rewriters.ai_rewriter import AIRewriter
 from src.utils.validator import SentenceValidator
 from src.utils.text_cleaner import clean_text_for_ai
+from src.utils.sentence_cache import SentenceCache
 
 logger = logging.getLogger(__name__)
 
@@ -73,10 +75,14 @@ class SentenceSplitter:
             'ai_rewritten': 0,
             'mechanical_chunked': 0,
             'failed': 0,
-            'api_calls': 0
+            'api_calls': 0,
+            'cache_hits': 0
         }
         # Live results list so callers can observe progress incrementally
         self.results: List[SentenceResult] = []
+        
+        # Initialize cache for AI mode to improve performance
+        self.cache = SentenceCache(max_size=500) if mode == ProcessingMode.AI_REWRITE else None
     
     def count_words(self, text: str) -> int:
         """Count words in text"""
@@ -297,6 +303,33 @@ class SentenceSplitter:
                         except Exception:
                             pass
                 else:
+                    # Check cache before adding to AI batch
+                    if self.cache:
+                        cached_result = self.cache.get(sentence)
+                        if cached_result:
+                            # Cache hit! Use cached rewrite
+                            self.stats['total_sentences'] += 1
+                            self.stats['ai_rewritten'] += 1
+                            self.stats['cache_hits'] += 1
+                            result = SentenceResult(
+                                original=sentence,
+                                output_sentences=cached_result,
+                                method="AI-Rewritten (cached)",
+                                word_count=word_count,
+                                success=True
+                            )
+                            self.results.append(result)
+                            
+                            if progress_callback:
+                                progress_callback(i + j + 1, total, sentence)
+                                try:
+                                    progress_callback(i + j + 1, total, {'done': True, 'index': i + j + 1})
+                                except Exception:
+                                    pass
+                            
+                            j += 1
+                            continue
+                    
                     # Add to batch for AI rewriting
                     temp_batch.append(sentence)
                     temp_indices.append(i + j)
@@ -362,6 +395,9 @@ class SentenceSplitter:
                                     word_count=word_count,
                                     success=True
                                 )
+                                # Cache successful rewrites for future use
+                                if self.cache:
+                                    self.cache.put(orig_sentence, rewritten)
                             else:
                                 # Validation failed - fall back to mechanical chunking
                                 logger.warning(f"AI rewrite validation failed: {error_msg}")
@@ -466,13 +502,19 @@ class SentenceSplitter:
         return self.results
     
     def get_stats(self) -> dict:
-        """Get processing statistics"""
+        """Get processing statistics including cache performance"""
         stats = self.stats.copy()
         
         # Add cost information if using AI
         if self.ai_rewriter:
             token_stats = self.ai_rewriter.get_token_stats()
             stats.update(token_stats)
+        
+        # Add cache statistics if cache is enabled
+        if self.cache:
+            cache_stats = self.cache.get_stats()
+            stats['cache_size'] = cache_stats['size']
+            stats['cache_hit_rate'] = cache_stats['hit_rate']
         
         return stats
     
@@ -484,8 +526,12 @@ class SentenceSplitter:
             'ai_rewritten': 0,
             'mechanical_chunked': 0,
             'failed': 0,
-            'api_calls': 0
+            'api_calls': 0,
+            'cache_hits': 0
         }
         
         if self.ai_rewriter:
             self.ai_rewriter.reset_token_count()
+        
+        if self.cache:
+            self.cache.clear()
