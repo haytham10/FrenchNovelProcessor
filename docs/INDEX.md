@@ -33,6 +33,7 @@ Start here if you're new to the project:
   - How to configure
   - How to process files
   - Cost estimates
+  - **NEW:** Performance optimization details
 
 ### For Developers
 
@@ -41,6 +42,18 @@ Start here if you're new to the project:
   - Module descriptions
   - Data flow
   - Architecture overview
+
+- **[OPTIMIZATION_STRATEGY.md](OPTIMIZATION_STRATEGY.md)** - Optimization guide 🆕
+  - Complete optimization strategy
+  - Algorithm details
+  - Performance benchmarks
+  - Implementation guide
+
+- **[OPTIMIZATION_QUICK_REFERENCE.md](OPTIMIZATION_QUICK_REFERENCE.md)** - Optimization quick reference 🆕
+  - Performance metrics
+  - Configuration settings
+  - Troubleshooting
+  - Best practices
 
 - **[MAINTENANCE.md](MAINTENANCE.md)** - Maintenance guide
   - Code organization
@@ -73,6 +86,8 @@ Start here if you're new to the project:
 |--------------|--------------|
 | Install the application | [README.md](../README.md) → Quick Start |
 | Setup Google Sheets output | [GOOGLE_SHEETS_SETUP.md](GOOGLE_SHEETS_SETUP.md) 🆕 |
+| **Understand performance optimizations** | [OPTIMIZATION_QUICK_REFERENCE.md](OPTIMIZATION_QUICK_REFERENCE.md) 🆕 |
+| **Improve processing speed** | [OPTIMIZATION_STRATEGY.md](OPTIMIZATION_STRATEGY.md) 🆕 |
 | Run the web interface | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) → Command Line |
 | Configure API keys | [README.md](../README.md) → Configure API Key |
 | Process a PDF | [README.md](../README.md) → Process Your First Novel |
@@ -123,13 +138,16 @@ When making changes:
 
 ```
 docs/
-├── INDEX.md                    ← You are here
-├── CHANGELOG.md               → Version history
-├── CLEANUP_SUMMARY.md         → Recent reorganization
-├── DRP.md                     → Development requirements
-├── MAINTENANCE.md             → Developer guide
-├── PROJECT_STRUCTURE.md       → Code structure
-└── QUICK_REFERENCE.md         → Quick reference
+├── INDEX.md                           ← You are here
+├── CHANGELOG.md                       → Version history
+├── CLEANUP_SUMMARY.md                 → Recent reorganization
+├── DRP.md                             → Development requirements
+├── MAINTENANCE.md                     → Developer guide
+├── PROJECT_STRUCTURE.md               → Code structure
+├── QUICK_REFERENCE.md                 → Quick reference
+├── GOOGLE_SHEETS_SETUP.md             → Google Sheets setup
+├── OPTIMIZATION_STRATEGY.md           → Optimization strategy (detailed) 🆕
+└── OPTIMIZATION_QUICK_REFERENCE.md    → Optimization quick guide 🆕
 ```
 
 ## 🔗 External Resources
@@ -197,8 +215,8 @@ For contributors, ensure:
 
 ---
 
-**Last Updated**: September 30, 2025  
-**Documentation Version**: 2.0  
-**Project Version**: 2.0
+**Last Updated**: October 2024  
+**Documentation Version**: 2.1  
+**Project Version**: 2.1 (Performance Optimizations)
 
 For questions or suggestions about documentation, please reach out to the development team.

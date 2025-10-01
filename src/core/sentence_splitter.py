@@ -1,6 +1,7 @@
 """
 Sentence Splitter Module
 Handles both AI-powered rewriting and legacy mechanical chunking
+Optimized with adaptive batching and caching for improved performance
 """
 
 import re
@@ -10,6 +11,7 @@ from enum import Enum
 from src.rewriters.ai_rewriter import AIRewriter
 from src.utils.validator import SentenceValidator
 from src.utils.text_cleaner import clean_text_for_ai
+from src.utils.sentence_cache import SentenceCache
 
 logger = logging.getLogger(__name__)
 
@@ -73,10 +75,14 @@ class SentenceSplitter:
             'ai_rewritten': 0,
             'mechanical_chunked': 0,
             'failed': 0,
-            'api_calls': 0
+            'api_calls': 0,
+            'cache_hits': 0
         }
         # Live results list so callers can observe progress incrementally
         self.results: List[SentenceResult] = []
+        
+        # Initialize cache for AI mode to improve performance
+        self.cache = SentenceCache(max_size=500) if mode == ProcessingMode.AI_REWRITE else None
     
     def count_words(self, text: str) -> int:
         """Count words in text"""
@@ -169,8 +175,9 @@ class SentenceSplitter:
                     )
                 else:
                     # Validation failed - fall back to mechanical chunking
-                    logger.warning(f"AI rewrite validation failed: {error_msg}")
-                    logger.info("Falling back to mechanical chunking")
+                    # Use debug level instead of warning to avoid cluttering logs
+                    logger.debug(f"AI rewrite validation failed: {error_msg}")
+                    logger.debug("Falling back to mechanical chunking")
                     chunks = self.mechanical_chunk(sentence)
                     self.stats['mechanical_chunked'] += 1
                     return SentenceResult(
@@ -209,35 +216,55 @@ class SentenceSplitter:
                 success=True
             )
     
+    def _get_optimal_batch_size(self, avg_word_count: int) -> int:
+        """
+        Determine optimal batch size based on sentence complexity
+        
+        Args:
+            avg_word_count: Average word count of sentences in batch
+            
+        Returns:
+            Optimal batch size
+        """
+        if avg_word_count <= 12:
+            return 35  # Simple sentences: larger batches
+        elif avg_word_count <= 18:
+            return 25  # Medium sentences: standard batches
+        else:
+            return 15  # Complex sentences: smaller batches
+    
     def _process_text_batch(self, sentences: List[str], progress_callback=None):
         """
-        Process text using batch AI rewriting for better performance
+        Process text using adaptive batch AI rewriting for optimal performance
         
         Args:
             sentences: List of sentences to process
             progress_callback: Optional callback function
         """
-        batch_size = 20  # Process 20 sentences per API call (aggressively optimized)
         i = 0
         total = len(sentences)
         
-        logger.info(f"Starting batch processing: {total} sentences, batch_size={batch_size}")
+        logger.info(f"Starting adaptive batch processing: {total} sentences")
         
         while i < total:
-            # Collect sentences for this batch
+            # Collect sentences for this batch (adaptive sizing)
             batch_sentences = []
             batch_indices = []
+            batch_word_counts = []
             
-            for j in range(batch_size):
-                if i + j >= total:
-                    break
-                    
+            # First pass: determine batch composition
+            temp_batch = []
+            temp_indices = []
+            j = 0
+            max_look_ahead = 50  # Look ahead up to 50 sentences
+            
+            while j < max_look_ahead and (i + j) < total:
                 sentence = sentences[i + j]
                 word_count = self.count_words(sentence)
                 
-                # Check if sentence needs processing
+                # Quick categorization
                 if word_count <= self.word_limit:
-                    # Direct pass-through
+                    # Direct pass-through (handle immediately)
                     self.stats['total_sentences'] += 1
                     self.stats['direct_sentences'] += 1
                     result = SentenceResult(
@@ -256,15 +283,15 @@ class SentenceSplitter:
                         except Exception:
                             pass
                             
-                elif word_count > 25:  # Skip very long sentences (likely to fail validation)
-                    # Use mechanical chunking directly
+                elif word_count > 30:  # Optimization: very long sentences use mechanical chunking
+                    # Use mechanical chunking directly (faster, no API cost)
                     self.stats['total_sentences'] += 1
                     self.stats['mechanical_chunked'] += 1
                     chunks = self.mechanical_chunk(sentence)
                     result = SentenceResult(
                         original=sentence,
                         output_sentences=chunks,
-                        method="Mechanical-Chunked (too long for AI)",
+                        method="Mechanical-Chunked (>30 words, optimized)",
                         word_count=word_count,
                         success=True
                     )
@@ -277,15 +304,57 @@ class SentenceSplitter:
                         except Exception:
                             pass
                 else:
+                    # Check cache before adding to AI batch
+                    if self.cache:
+                        cached_result = self.cache.get(sentence)
+                        if cached_result:
+                            # Cache hit! Use cached rewrite
+                            self.stats['total_sentences'] += 1
+                            self.stats['ai_rewritten'] += 1
+                            self.stats['cache_hits'] += 1
+                            result = SentenceResult(
+                                original=sentence,
+                                output_sentences=cached_result,
+                                method="AI-Rewritten (cached)",
+                                word_count=word_count,
+                                success=True
+                            )
+                            self.results.append(result)
+                            
+                            if progress_callback:
+                                progress_callback(i + j + 1, total, sentence)
+                                try:
+                                    progress_callback(i + j + 1, total, {'done': True, 'index': i + j + 1})
+                                except Exception:
+                                    pass
+                            
+                            j += 1
+                            continue
+                    
                     # Add to batch for AI rewriting
-                    batch_sentences.append(sentence)
-                    batch_indices.append(i + j)
+                    temp_batch.append(sentence)
+                    temp_indices.append(i + j)
+                    batch_word_counts.append(word_count)
+                
+                j += 1
+            
+            # Determine optimal batch size based on complexity
+            if temp_batch:
+                avg_word_count = sum(batch_word_counts) / len(batch_word_counts)
+                optimal_batch_size = self._get_optimal_batch_size(avg_word_count)
+                
+                # Take only optimal_batch_size sentences
+                batch_sentences = temp_batch[:optimal_batch_size]
+                batch_indices = temp_indices[:optimal_batch_size]
+                
+                logger.info(f"Batch composition: {len(batch_sentences)} sentences, "
+                          f"avg {avg_word_count:.1f} words, batch_size={optimal_batch_size}")
             
             # Process the batch with AI if we have any sentences
             if batch_sentences:
                 try:
                     # Call batch rewrite
-                    logger.info(f"Processing batch of {len(batch_sentences)} sentences (batch #{self.stats['api_calls']+1})")
+                    logger.info(f"Processing AI batch of {len(batch_sentences)} sentences (call #{self.stats['api_calls']+1})")
                     rewritten_dict = self.ai_rewriter.rewrite_batch(batch_sentences)
                     self.stats['api_calls'] += 1
                     logger.info(f"Batch processed successfully, got {len(rewritten_dict)} results")
@@ -327,9 +396,13 @@ class SentenceSplitter:
                                     word_count=word_count,
                                     success=True
                                 )
+                                # Cache successful rewrites for future use
+                                if self.cache:
+                                    self.cache.put(orig_sentence, rewritten)
                             else:
                                 # Validation failed - fall back to mechanical chunking
-                                logger.warning(f"AI rewrite validation failed: {error_msg}")
+                                # Use debug level instead of warning to avoid cluttering logs
+                                logger.debug(f"AI rewrite validation failed: {error_msg}")
                                 chunks = self.mechanical_chunk(orig_sentence)
                                 self.stats['mechanical_chunked'] += 1
                                 result = SentenceResult(
@@ -377,8 +450,8 @@ class SentenceSplitter:
                             except Exception:
                                 pass
             
-            # Move to next batch
-            i += batch_size
+            # Move to next position (account for sentences we just processed)
+            i += j
     
     def process_text(self, text: str, progress_callback=None) -> List[SentenceResult]:
         """
@@ -431,13 +504,19 @@ class SentenceSplitter:
         return self.results
     
     def get_stats(self) -> dict:
-        """Get processing statistics"""
+        """Get processing statistics including cache performance"""
         stats = self.stats.copy()
         
         # Add cost information if using AI
         if self.ai_rewriter:
             token_stats = self.ai_rewriter.get_token_stats()
             stats.update(token_stats)
+        
+        # Add cache statistics if cache is enabled
+        if self.cache:
+            cache_stats = self.cache.get_stats()
+            stats['cache_size'] = cache_stats['size']
+            stats['cache_hit_rate'] = cache_stats['hit_rate']
         
         return stats
     
@@ -449,8 +528,12 @@ class SentenceSplitter:
             'ai_rewritten': 0,
             'mechanical_chunked': 0,
             'failed': 0,
-            'api_calls': 0
+            'api_calls': 0,
+            'cache_hits': 0
         }
         
         if self.ai_rewriter:
             self.ai_rewriter.reset_token_count()
+        
+        if self.cache:
+            self.cache.clear()
