@@ -23,28 +23,6 @@ logger = logging.getLogger(__name__)
 
 
 class FrenchTextProcessor:
-    def get_token_stats(self) -> dict:
-        """Return token usage and cost estimate (for dashboard/statistics)"""
-        # Pricing: gpt-4o-mini (as of 2025): $0.0005 per 1K input, $0.0015 per 1K output tokens
-        input_cost = self.total_input_tokens / 1000 * 0.0005
-        output_cost = self.total_output_tokens / 1000 * 0.0015
-        total_cost = input_cost + output_cost
-        return {
-            'input_tokens': self.total_input_tokens,
-            'output_tokens': self.total_output_tokens,
-            'total_tokens': self.total_input_tokens + self.total_output_tokens,
-            'estimated_cost': round(total_cost, 6)
-        }
-
-    def reset_token_count(self):
-        """Reset token counters (for new runs)"""
-        self.total_input_tokens = 0
-        self.total_output_tokens = 0
-        self.api_call_count = 0
-    """
-    Dead-simple French text processor.
-    Philosophy: One smart AI call + minimal cleanup = fast, reliable results
-    """
 
     def __init__(self, api_key: str, word_limit: int = 8, model: str = "gpt-4o-mini"):
         """
@@ -99,15 +77,15 @@ class FrenchTextProcessor:
         numbered = "\n".join([f"{i+1}. {s}" for i, s in enumerate(segments)])
         
         # THE PERFECT PROMPT: Clear, with examples, unambiguous format
-        prompt = f"""Split French text into chunks of EXACTLY {self.word_limit} words or less.
+        prompt = f"""Split French text into sentences of EXACTLY {self.word_limit} words or less.
 
 CRITICAL RULES:
-• Each chunk: {self.word_limit} words maximum (count carefully!)
-• Each chunk must be a complete, meaningful phrase
+• Each sentence: {self.word_limit} words maximum (count carefully!)
+• Each sentence must be a complete, meaningful phrase
 • Use ALL words from original in exact order
 • Fix OCR errors: "gâ teaux"→"gâteaux", "de­ vant"→"devant"
 • Never end with ", elle" or ". Je" - these are incomplete
-• Output format: "1) chunk" (one per line)
+• Output format: "1) sentence" (one per line)
 
 EXAMPLES:
 Input: "Moma, ma mère, reste debout devant moi avec la robe."
@@ -273,5 +251,4 @@ NOW PROCESS:
         """Process batch (legacy API)"""
         return self.process(sentences)
 
-# For backward compatibility with code expecting AIRewriter
 AIRewriter = FrenchTextProcessor

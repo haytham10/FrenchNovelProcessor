@@ -14,7 +14,7 @@ def test_imports():
     print("Testing imports...")
     try:
         from src.utils.config_manager import ConfigManager
-        from src.rewriters.ai_rewriter import AIRewriter
+        from src.rewriters.ai_rewriter_backup_2 import AIRewriter
         from src.utils.validator import SentenceValidator
         from src.core.sentence_splitter import SentenceSplitter, ProcessingMode
         from src.core.processor import NovelProcessor
@@ -117,7 +117,7 @@ def test_ai_rewriter_mock():
     """Test AI rewriter initialization (without actual API call)"""
     print("\nTesting AIRewriter initialization...")
     try:
-        from src.rewriters.ai_rewriter import AIRewriter
+        from src.rewriters.ai_rewriter_backup_2 import AIRewriter
         
         # Create with dummy key (won't make actual calls)
         rewriter = AIRewriter(api_key="test_key", word_limit=8)

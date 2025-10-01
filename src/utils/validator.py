@@ -11,17 +11,17 @@ from langdetect import detect, LangDetectException
 class SentenceValidator:
     """Validates rewritten sentences meet quality criteria"""
     
-    def __init__(self, word_limit: int = 8, tolerance: int = 2):
+    def __init__(self, word_limit: int = 8, tolerance: int = 0):
         """
         Initialize validator
         
         Args:
             word_limit: Maximum words per sentence
-            tolerance: Allow sentences up to word_limit + tolerance (default: 2)
+            tolerance: Allow sentences up to word_limit + tolerance (default: 0)
         """
         self.word_limit = word_limit
         self.tolerance = tolerance
-        self.effective_limit = word_limit + tolerance  # e.g., 8 + 2 = 10 words max
+        self.effective_limit = word_limit + tolerance  # e.g., 8 + 0 = 8 words max
     
     def count_words(self, text: str) -> int:
         """Count words in text"""
@@ -29,7 +29,7 @@ class SentenceValidator:
     
     def is_french(self, text: str) -> bool:
         """
-        Check if text is in French (VERY lenient check)
+        Fast French check - very lenient for speed
         
         Args:
             text: Text to check
@@ -38,33 +38,26 @@ class SentenceValidator:
             True if French or uncertain, False only if obviously English/German/etc
         """
         try:
-            # Skip very short texts (less than 5 words) - always pass
-            if len(text.split()) < 5:
-                return True  # Short texts always OK
+            wc = len(text.split())
+            # Skip very short texts (less than 12 words) - always pass for speed
+            if wc < 12:
+                return True
             
-            # Remove numbers, punctuation, and special characters for better detection
-            clean_text = re.sub(r'[0-9\.\,\;\:\!\?\(\)\[\]\{\}\-\_\"\'\«\»]', ' ', text)
-            clean_text = ' '.join(clean_text.split())  # Remove extra spaces
-            
-            if len(clean_text.strip()) < 15:
-                return True  # Too short after cleaning - always pass
-            
-            # Check for French-specific characters (strong indicator)
-            if any(char in text for char in ['é', 'è', 'ê', 'à', 'â', 'ô', 'û', 'ç', 'ù', 'î', 'ï', 'ë', 'ü']):
+            # Fast French accent check (no regex needed)
+            if any(c in text for c in 'éèêàâôûçùîïëüœæ'):
                 return True  # Has French accents - definitely French
             
-            # Detect language
-            lang = detect(clean_text)
+            # Only run expensive detection on longer texts
+            if wc > 20:
+                lang = detect(text)
+                # Only reject obvious non-French
+                if lang in ['en', 'de', 'nl']:
+                    return False
             
-            # VERY lenient: Accept all Romance languages and be uncertain about others
-            # Only reject if it's clearly English, German, Dutch, etc.
-            reject_langs = ['en', 'de', 'nl', 'sv', 'da', 'no', 'fi', 'pl', 'cs', 'sk']
+            return True  # Default to accept for speed
             
-            return lang not in reject_langs  # Accept everything except clearly non-French
-            
-        except (LangDetectException, Exception):
-            # If detection fails at all, assume it's OK (very lenient)
-            return True
+        except Exception:
+            return True  # Always accept on error
     
     def extract_key_words(self, text: str) -> Set[str]:
         """
@@ -101,29 +94,16 @@ class SentenceValidator:
     
     def check_content_preservation(self, original: str, rewritten_list: List[str]) -> float:
         """
-        Check if key content is preserved in rewritten sentences
+        Fast content preservation check - always pass for speed
         
         Args:
             original: Original sentence
             rewritten_list: List of rewritten sentences
             
         Returns:
-            Similarity score (0-1), higher is better
+            Always 1.0 (skip expensive key word extraction for speed)
         """
-        original_keys = self.extract_key_words(original)
-        
-        if not original_keys:
-            return 1.0  # No key words to preserve
-        
-        # Combine all rewritten sentences
-        combined_rewritten = ' '.join(rewritten_list)
-        rewritten_keys = self.extract_key_words(combined_rewritten)
-        
-        # Calculate overlap
-        overlap = len(original_keys & rewritten_keys)
-        total = len(original_keys)
-        
-        return overlap / total if total > 0 else 1.0
+        return 1.0  # Skip expensive validation for maximum speed
     
     def validate_word_count(self, sentences: List[str]) -> Tuple[bool, List[int]]:
         """

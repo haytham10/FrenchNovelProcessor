@@ -81,29 +81,39 @@ class GeminiRewriter:
     
     def get_system_prompt(self) -> str:
         """Get the system prompt for AI rewriting"""
-        return f"""You are a French language expert specializing in sentence simplification.
-Your task is to rewrite long French sentences into shorter, grammatically correct sentences while preserving the original meaning and using as many original words as possible.
+        return f"""You are a French language expert specializing in sentence restructuring.
 
-Rules:
-1. Each new sentence must be {self.word_limit} words or fewer
-2. Maintain proper French grammar and syntax
-3. Preserve the original meaning completely
-4. Reuse original words whenever possible
+TASK: Analyze each French sentence. If it has {self.word_limit} words or fewer, keep it as-is. If longer, rewrite it into multiple new sentences that each contain {self.word_limit} words or fewer.
+
+CRITICAL RULES:
+1. Each output sentence MUST be {self.word_limit} words or fewer (count carefully!)
+2. Preserve the original meaning completely
+3. Reuse as many original words as possible from the source sentence
+4. Maintain proper French grammar and syntax
 5. Ensure natural, fluent French
-6. Output only the rewritten sentences, one per line
-7. Do not add explanations or commentary
-8. Do not add numbering or bullet points
-9. Keep the same tone and style as the original"""
+6. Output ONLY the rewritten sentences, one per line
+7. NO explanations, NO commentary, NO numbering, NO bullet points
+8. Keep the same tone and style as the original
+
+ALGORITHM:
+- If sentence ≤ {self.word_limit} words: output it unchanged
+- If sentence > {self.word_limit} words: split into multiple sentences, each ≤ {self.word_limit} words, preserving meaning and reusing original words"""
     
     def get_full_prompt(self, sentence: str) -> str:
         """Get the complete prompt for a specific sentence"""
+        word_count = self.count_words(sentence)
         return f"""{self.get_system_prompt()}
 
-Rewrite this French sentence into multiple shorter sentences, each containing {self.word_limit} words or fewer:
-
+ANALYZE THIS SENTENCE:
 "{sentence}"
 
-Output format: One sentence per line, no numbering."""
+Word count: {word_count}
+Word limit: {self.word_limit}
+
+INSTRUCTION: 
+{f'This sentence is within the limit. Output it as-is.' if word_count <= self.word_limit else f'This sentence exceeds the limit. Rewrite it into multiple sentences, each with {self.word_limit} words or fewer, preserving meaning and reusing original words.'}
+
+OUTPUT (one sentence per line, no numbering):"""
     
     @retry(
         stop=stop_after_attempt(5),  # Increased from 3 to 5 attempts
@@ -180,6 +190,10 @@ Output format: One sentence per line, no numbering."""
         """
         Rewrite multiple sentences in one API call (MUCH faster!)
         
+        ALGORITHM for each sentence:
+        1. If sentence has ≤ word_limit words: keep as-is
+        2. If sentence has > word_limit words: rewrite into multiple sentences, each ≤ word_limit words
+        
         Args:
             sentences: List of sentences to rewrite
             
@@ -189,25 +203,38 @@ Output format: One sentence per line, no numbering."""
         if not sentences:
             return {}
         
-        # Build batch prompt
-        numbered_sentences = "\n".join([f"{i+1}. {s}" for i, s in enumerate(sentences)])
+        # Build batch prompt with word counts for context
+        numbered_sentences = []
+        for i, s in enumerate(sentences):
+            wc = self.count_words(s)
+            numbered_sentences.append(f"{i+1}. [{wc} words] {s}")
         
-        batch_prompt = f"""Rewrite these French sentences. Each sentence must be split into chunks of EXACTLY {self.word_limit} words or fewer.
+        batch_input = "\n".join(numbered_sentences)
+        
+        batch_prompt = f"""You are processing French sentences with a {self.word_limit}-word limit.
 
-INPUT:
-{numbered_sentences}
+ALGORITHM:
+- If a sentence has {self.word_limit} words or fewer: output it unchanged
+- If a sentence has more than {self.word_limit} words: rewrite it into multiple sentences, each {self.word_limit} words or fewer
+- Preserve meaning and reuse original words when rewriting
 
-REQUIRED OUTPUT FORMAT (one line per sentence):
-1: rewritten sentence one. rewritten sentence two.
-2: rewritten sentence one. rewritten sentence two.
-3: rewritten sentence one.
+INPUT SENTENCES:
+{batch_input}
+
+OUTPUT FORMAT (one line per input sentence):
+1: output sentence one. output sentence two.
+2: output sentence.
+3: output sentence one. output sentence two. output sentence three.
 
 RULES:
-- Each line starts with "NUMBER: " 
-- Each rewritten chunk is {self.word_limit} words or fewer
-- Preserve the original meaning
-- Use words from the original text
-- NO explanations or extra text"""
+- Each line MUST start with "NUMBER: "
+- Each output sentence MUST be {self.word_limit} words or fewer
+- If input is already ≤{self.word_limit} words, output it as-is
+- If input is >{self.word_limit} words, split into multiple sentences
+- Preserve original meaning and reuse original words
+- NO explanations, NO extra text
+
+OUTPUT:"""
         
         try:
             # Configure generation settings

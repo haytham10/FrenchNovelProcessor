@@ -9,7 +9,7 @@ __client__ = "Stan Jones"
 # Import key classes for easier access
 from src.core.processor import NovelProcessor
 from src.core.sentence_splitter import SentenceSplitter, ProcessingMode
-from src.rewriters.ai_rewriter import AIRewriter
+from src.rewriters.ai_rewriter_backup_2 import AIRewriter
 from src.rewriters.gemini_rewriter import GeminiRewriter
 from src.utils.config_manager import ConfigManager
 from src.utils.validator import SentenceValidator

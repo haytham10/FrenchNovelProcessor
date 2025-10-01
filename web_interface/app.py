@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.utils.config_manager import ConfigManager
 from src.core.processor import NovelProcessor
-from src.rewriters.ai_rewriter import AIRewriter
+from src.rewriters.ai_rewriter_backup_2 import AIRewriter
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'

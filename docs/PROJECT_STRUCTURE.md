@@ -13,7 +13,6 @@ FrenchNovelProcessor/
 │   ├── PROJECT_STRUCTURE.md   # This file
 │   ├── MAINTENANCE.md         # Maintenance guide
 │   ├── QUICK_REFERENCE.md     # Quick reference
-│   ├── CLEANUP_SUMMARY.md     # Cleanup summary
 │   └── INDEX.md               # Documentation index
 ├── scripts/                    # Utility scripts
 │   ├── setup.bat              # Initial setup and dependencies

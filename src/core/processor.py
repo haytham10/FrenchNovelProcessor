@@ -729,8 +729,8 @@ class NovelProcessor:
                     sstats = splitter.get_stats() if hasattr(splitter, 'get_stats') else getattr(splitter, 'stats', {})
                     if isinstance(sstats, dict):
                         summary['api_calls'] = sstats.get('api_calls', summary.get('api_calls', 0))
-                        # Try a few possible keys for cost
-                        summary['cost'] = sstats.get('cost', sstats.get('token_cost', summary.get('cost', 0.0)))
+                        # Prefer 'estimated_cost' if present, else fallback
+                        summary['cost'] = sstats.get('estimated_cost', sstats.get('cost', sstats.get('token_cost', summary.get('cost', 0.0))))
             except Exception:
                 pass
 

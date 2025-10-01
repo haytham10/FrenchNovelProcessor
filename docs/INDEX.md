@@ -12,13 +12,25 @@ Start here if you're new to the project:
    - Feature overview
    - Requirements and dependencies
 
-2. **[GOOGLE_SHEETS_SETUP.md](GOOGLE_SHEETS_SETUP.md)** - Google Sheets integration setup 🆕
+2. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Quick reference card 🆕
+   - How the algorithm works
+   - Settings explained
+   - Examples by word count
+   - Tips & tricks
+
+3. **[ALGORITHM.md](ALGORITHM.md)** - Core algorithm explained 🆕
+   - Step-by-step processing flow
+   - Rewriting rules
+   - Examples and edge cases
+   - Performance metrics
+
+4. **[GOOGLE_SHEETS_SETUP.md](GOOGLE_SHEETS_SETUP.md)** - Google Sheets integration
    - Step-by-step OAuth setup
    - API enablement guide
    - Troubleshooting
    - Security notes
 
-3. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Quick reference guide
+5. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Developer quick reference
    - Command cheat sheet
    - Common tasks
    - Troubleshooting quick fixes
@@ -33,6 +45,18 @@ Start here if you're new to the project:
   - How to configure
   - How to process files
   - Cost estimates
+
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Quick reference card 🆕
+  - Algorithm explanation
+  - Settings guide
+  - Examples with word counts
+  - FAQ
+
+- **[ALGORITHM.md](ALGORITHM.md)** - Algorithm documentation 🆕
+  - Detailed processing flow
+  - Rewriting rules
+  - Configuration options
+  - Performance analysis
 
 ### For Developers
 
@@ -60,22 +84,20 @@ Start here if you're new to the project:
   - Client requirements
   - Development timeline
 
-- **[CLEANUP_SUMMARY.md](CLEANUP_SUMMARY.md)** - Recent cleanup
-  - Organization changes
-  - Migration notes
-  - Structure improvements
-
 ## 🎯 Quick Navigation
 
 ### By Task
 
 | I want to... | Read this... |
 |--------------|--------------|
+| **Understand how it works** | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) 🆕 |
+| **See the algorithm details** | [ALGORITHM.md](ALGORITHM.md) 🆕 |
 | Install the application | [README.md](../README.md) → Quick Start |
-| Setup Google Sheets output | [GOOGLE_SHEETS_SETUP.md](GOOGLE_SHEETS_SETUP.md) 🆕 |
+| Setup Google Sheets output | [GOOGLE_SHEETS_SETUP.md](GOOGLE_SHEETS_SETUP.md) |
 | Run the web interface | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) → Command Line |
 | Configure API keys | [README.md](../README.md) → Configure API Key |
 | Process a PDF | [README.md](../README.md) → Process Your First Novel |
+| Change word limit | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) → Settings |
 | Add a new AI provider | [MAINTENANCE.md](MAINTENANCE.md) → Adding New AI Provider |
 | Run tests | [QUICK_REFERENCE.md](QUICK_REFERENCE.md) → Command Line |
 | Understand the structure | [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) |
@@ -86,9 +108,10 @@ Start here if you're new to the project:
 ### By Role
 
 #### **End Users**
-1. [README.md](../README.md) - Start here
-2. [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - Common tasks
-3. [CHANGELOG.md](CHANGELOG.md) - What's new
+1. [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - **Start here!** 🆕
+2. [README.md](../README.md) - Full guide
+3. [ALGORITHM.md](ALGORITHM.md) - How it works 🆕
+4. [CHANGELOG.md](CHANGELOG.md) - What's new
 
 #### **Developers**
 1. [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Understand the code
@@ -125,7 +148,6 @@ When making changes:
 docs/
 ├── INDEX.md                    ← You are here
 ├── CHANGELOG.md               → Version history
-├── CLEANUP_SUMMARY.md         → Recent reorganization
 ├── DRP.md                     → Development requirements
 ├── MAINTENANCE.md             → Developer guide
 ├── PROJECT_STRUCTURE.md       → Code structure

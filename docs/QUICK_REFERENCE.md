@@ -1,250 +1,228 @@
-# Quick Reference Guide
+# French Novel Processor - Quick Reference Card
 
-## Command Line Quick Start
+## 🎯 What Does This Tool Do?
 
-```bash
-# Setup (first time only)
-scripts\setup.bat
+**Analyzes French text sentence by sentence:**
+- ✅ Sentences ≤8 words → Added directly to Google Sheet
+- ✂️ Sentences >8 words → Rewritten into multiple sentences, each ≤8 words
 
-# Run web interface
-scripts\run_application.bat
-
-# Install Gemini support
-scripts\install_gemini.bat
-
-# Run tests
-python tests\test_basic.py
-python tests\test_gemini.py
-
-# Run demo
-python tests\demo.py
+**Example:**
 ```
+📥 Input: "Pierre marche lentement dans le grand parc avec son chien noir." (10 words)
 
-## Configuration Files
-
-### config.ini Structure
-```ini
-[OpenAI]
-api_key = sk-...
-
-[Gemini]
-gemini_api_key = ...
-
-[Processing]
-word_limit = 8
-use_gemini_dev = false
+📤 Output:
+   ✓ "Pierre marche dans le grand parc." (6 words)
+   ✓ "Il est avec son chien noir." (6 words)
 ```
-
-## API Endpoints (Web Interface)
-
-### Settings
-- `GET /api/settings` - Get current settings
-- `POST /api/settings` - Update settings
-- `POST /api/test-api-key` - Test OpenAI key
-- `POST /api/test-gemini-key` - Test Gemini key
-
-### Processing
-- `POST /api/upload` - Upload PDF
-- `POST /api/process` - Process uploaded file
-- `GET /api/progress` - Check processing status
-- `GET /api/download/<filename>` - Download results
-
-## Processing Modes
-
-| Mode | Description | Use Case |
-|------|-------------|----------|
-| `mechanical` | 8-word chunks | Fast, no API needed |
-| `ai_rewrite` | OpenAI GPT-5 nano | High quality, fastest & cheapest |
-| `gemini_rewrite` | Gemini 2.5 Flash Lite | Free tier available |
-
-## Cost Estimates
-
-### OpenAI (GPT-5 nano)
-- Input: $0.05 per 1M tokens
-- Output: $0.40 per 1M tokens
-- Typical novel (350 pages): $0.50-1
-
-### Gemini (2.5 Flash Lite)
-- Input: $0.10 per 1M tokens
-- Output: $0.40 per 1M tokens
-- Free tier: 15 RPM, 1500 RPD
-- Lower cost alternative
-
-## Common Tasks
-
-### Change AI Provider
-1. Open Settings
-2. Select provider (OpenAI/Gemini)
-3. Enter API key
-4. Click Test
-5. Click Save
-
-### Process a PDF
-1. Upload PDF file
-2. Set word limit (default: 8)
-3. Choose processing mode
-4. Click Start Processing
-5. Wait for completion
-6. Download results
-
-### Check Processing Status
-- Progress bar shows completion %
-- Status messages show current step
-- Estimated time remaining displayed
-- Token usage tracked in real-time
-
-## File Formats
-
-### Input
-- PDF files (text or scanned)
-- Supported languages: French (primary)
-
-### Output
-- CSV format with columns:
-  - Original Sentence
-  - Rewritten Sentences
-  - Word Count
-  - Method Used
-  - Timestamp
-
-## Troubleshooting Quick Fixes
-
-### Problem: "API Key Invalid"
-```bash
-# Check config.ini has correct key
-# Key should start with "sk-" (OpenAI) or be valid Gemini key
-# Test using Settings → Test button
-```
-
-### Problem: "Module Not Found"
-```bash
-# Activate virtual environment
-.venv\Scripts\activate
-# Reinstall dependencies
-pip install -r requirements.txt
-```
-
-### Problem: "OCR Failed"
-```bash
-# Install Tesseract: https://github.com/UB-Mannheim/tesseract/wiki
-# Install Poppler: https://github.com/oschwartz10612/poppler-windows/releases
-# Add both to system PATH
-```
-
-### Problem: "Port Already in Use"
-```bash
-# Find process using port 5000
-netstat -ano | findstr :5000
-# Kill the process
-taskkill /PID <process_id> /F
-```
-
-## Keyboard Shortcuts (Web Interface)
-
-- `Ctrl+U` - Focus upload area
-- `Ctrl+S` - Open settings (when not in input)
-- `Esc` - Close modal
-- `Enter` - Submit form (when focused)
-
-## File Locations
-
-```
-config.ini              → User settings
-output/                 → CLI processed files
-web_interface/output/   → Web processed files
-web_interface/uploads/  → Uploaded PDFs
-requirements.txt        → Python dependencies
-.venv/                  → Virtual environment
-```
-
-## Python Module Reference
-
-### Import Paths
-```python
-from src.core.processor import NovelProcessor
-from src.core.sentence_splitter import SentenceSplitter, ProcessingMode
-from src.rewriters.ai_rewriter import AIRewriter
-from src.rewriters.gemini_rewriter import GeminiRewriter
-from src.utils.validator import SentenceValidator
-from src.utils.config_manager import ConfigManager
-```
-
-### Quick Example
-```python
-from src.utils.config_manager import ConfigManager
-from src.core.sentence_splitter import SentenceSplitter, ProcessingMode
-
-config = ConfigManager()
-splitter = SentenceSplitter(
-    word_limit=8,
-    mode=ProcessingMode.AI_REWRITE,
-    api_key=config.get_openai_api_key()
-)
-
-sentences = ["Long French sentence..."]
-results = splitter.process_sentences(sentences)
-```
-
-## Environment Variables
-
-```bash
-# Optional: Override config.ini
-export OPENAI_API_KEY="sk-..."
-export GEMINI_API_KEY="..."
-
-# Set log level
-export LOG_LEVEL="DEBUG"
-
-# Set Flask environment
-export FLASK_ENV="development"
-```
-
-## Docker Support (Future)
-
-```dockerfile
-# Coming soon - containerized deployment
-docker build -t french-processor .
-docker run -p 5000:5000 french-processor
-```
-
-## Browser Compatibility
-
-### Supported Browsers
-- Chrome 90+ ✅
-- Firefox 88+ ✅
-- Edge 90+ ✅
-- Safari 14+ ✅
-
-### Required Features
-- JavaScript enabled
-- Cookies enabled
-- Local storage access
-- Drag and drop API
-
-## Performance Tips
-
-1. **Batch Processing**: Process multiple files in sequence
-2. **Cache Responses**: Identical sentences reuse results
-3. **Optimize Prompts**: Shorter prompts = lower costs
-4. **Use Gemini Free Tier**: 1500 requests/day free
-5. **Monitor Token Usage**: Track costs in real-time
-
-## Support Resources
-
-- Documentation: `docs/`
-- Tests: `tests/`
-- Examples: `tests/demo.py`
-- Structure: `docs/PROJECT_STRUCTURE.md`
-- Maintenance: `docs/MAINTENANCE.md`
-- Changelog: `docs/CHANGELOG.md`
-
-## Version Information
-
-Current Version: 2.0
-Python Required: 3.8+
-Platform: Windows
-License: Proprietary
 
 ---
 
-For detailed information, see the full README.md and documentation in `docs/`.
+## ⚙️ Settings
+
+| Setting | Default | What It Does |
+|---------|---------|--------------|
+| **Word Limit** | 8 | Sentences with this many words or fewer pass through unchanged. Longer sentences are rewritten. |
+| **Processing Mode** | AI Rewrite | How to handle long sentences: AI (smart) or Mechanical (simple chunks) |
+| **API Provider** | Gemini (dev) | Which AI to use: Gemini (free) or OpenAI (paid, better quality) |
+| **Show Original** | Yes | Include original sentence in output for comparison |
+
+---
+
+## 📊 How It Works
+
+### Step 1: Analyze Sentence
+```
+Word count = count words in sentence
+```
+
+### Step 2: Process
+```
+IF word count ≤ word_limit (default: 8):
+    → Add sentence to output (Direct)
+ELSE:
+    → Rewrite into multiple sentences (each ≤ word_limit)
+    → Each new sentence:
+       ✓ Must be ≤ word_limit words
+       ✓ Preserves original meaning
+       ✓ Reuses original words
+       ✓ Maintains French grammar
+```
+
+### Step 3: Output
+All sentences (direct + rewritten) → Google Sheet / Excel / CSV
+
+---
+
+## 📝 Examples by Word Count
+
+### ✅ 3 words (Direct)
+```
+Input:  "Je marche vite." (3 ≤ 8)
+Output: "Je marche vite."
+```
+
+### ✅ 8 words (Direct - at limit)
+```
+Input:  "Je marche lentement dans le grand parc municipal." (8 ≤ 8)
+Output: "Je marche lentement dans le grand parc municipal."
+```
+
+### ✂️ 10 words (Rewritten)
+```
+Input:  "Le chat noir dort paisiblement sur le canapé près de la fenêtre." (11 > 8)
+Output: "Le chat noir dort sur le canapé." (7 words)
+        "Le canapé est près de la fenêtre." (7 words)
+```
+
+### ✂️ 20 words (Rewritten - multiple)
+```
+Input:  "Le professeur a expliqué que la théorie de la relativité était très difficile à comprendre pour les jeunes étudiants." (20 > 8)
+Output: "Le professeur a expliqué la théorie." (6 words)
+        "La relativité est difficile à comprendre." (6 words)
+        "C'est dur pour les jeunes étudiants." (6 words)
+```
+
+---
+
+## 🔧 Word Limit Configuration
+
+You can change the default 8-word limit:
+
+| Use Case | Suggested Limit | Why |
+|----------|----------------|-----|
+| **Children's books** | 5 words | Very simple sentences |
+| **Language learners** | 8 words | Balance of simplicity and meaning (default) |
+| **Intermediate readers** | 12 words | More natural sentences |
+| **Advanced users** | 15 words | Keep longer complex ideas together |
+
+**To change:** Settings → "Word Limit per Sentence" → Enter number → Save
+
+---
+
+## 📈 Statistics
+
+After processing, you'll see:
+
+| Stat | Meaning |
+|------|---------|
+| **Direct sentences** | Sentences that were ≤ word_limit (added as-is) |
+| **AI-rewritten** | Sentences that were > word_limit (rewritten by AI) |
+| **Mechanical-chunked** | Sentences split by simple word division (AI fallback) |
+| **Total sentences** | All sentences processed |
+| **API calls** | Number of AI requests made |
+| **Cost estimate** | Approximate cost in USD |
+
+**Example output:**
+```
+📊 Statistics:
+   - Total sentences: 1,000
+   - Direct (≤8 words): 350 (35%)
+   - AI-rewritten (>8 words): 600 (60%)
+   - Mechanical chunks: 50 (5%)
+   - API calls: 650
+   - Cost: $0.13
+```
+
+---
+
+## 💡 Tips & Tricks
+
+### 🎯 For Best Results
+1. **Use AI mode** - Much better grammar than mechanical chunking
+2. **Start with word_limit=8** - Good balance for most use cases
+3. **Enable "Show Original"** - Compare before/after to verify quality
+4. **Check the log** - Review which sentences were rewritten
+
+### 💰 To Save Money
+1. **Use Gemini (dev mode)** - Free tier: 15 requests/min, 1500/day
+2. **Higher word limit** - Fewer sentences need rewriting
+3. **Mechanical mode** - Free but lower quality
+
+### 📚 For Language Learning
+1. **Word limit = 8** - Simple enough to understand
+2. **Show Original = Yes** - Learn by comparison
+3. **Export to Excel** - Review offline, add notes
+
+### 🚀 For Large Documents
+1. **Use batch processing** - Much faster
+2. **Gemini for free** - No cost concerns
+3. **Check progress** - Web interface shows real-time updates
+
+---
+
+## ❓ FAQ
+
+**Q: Why 8 words?**  
+A: Research shows 8 words is ideal for language learners - long enough to be meaningful, short enough to be simple.
+
+**Q: Can I change the word limit?**  
+A: Yes! Settings → Word Limit → Any number you want.
+
+**Q: What if AI fails?**  
+A: Automatic fallback to mechanical chunking (simple word-based splitting).
+
+**Q: Do short sentences get changed?**  
+A: No! If a sentence is ≤ word_limit, it's added to output unchanged.
+
+**Q: Is the meaning preserved?**  
+A: Yes! The AI is instructed to preserve meaning and reuse original words.
+
+**Q: What about grammar?**  
+A: AI mode maintains proper French grammar. Mechanical mode may create fragments.
+
+**Q: How much does it cost?**  
+A: Gemini (free tier): $0. OpenAI: ~$0.50-1.00 per novel.
+
+**Q: Can I process offline?**  
+A: Yes, use Mechanical mode (no API needed).
+
+---
+
+## 🚦 Quick Start
+
+1. **Launch:** Run `scripts\run_application.bat`
+2. **Open:** Browser → http://localhost:5000
+3. **Configure:** Settings → Add API key (Gemini or OpenAI)
+4. **Upload:** Drag & drop your PDF
+5. **Set limit:** Word Limit = 8 (or your preference)
+6. **Process:** Click "Process PDF"
+7. **Download:** Excel, CSV, or upload to Google Sheets
+
+**That's it!** Your French text is now simplified into sentences of 8 words or fewer. 🎉
+
+---
+
+## 📖 Algorithm Summary
+
+```
+FOR EACH sentence IN book:
+    word_count = count_words(sentence)
+    
+    IF word_count <= word_limit:
+        ADD sentence to output  (unchanged)
+    ELSE:
+        REWRITE sentence into multiple sentences
+        WHERE each new sentence <= word_limit
+        AND meaning is preserved
+        AND original words are reused
+        AND French grammar is correct
+        
+        ADD new sentences to output
+
+EXPORT all sentences to Google Sheets/Excel/CSV
+```
+
+Simple as that! 📊✨
+
+---
+
+## 📚 More Info
+
+- **Full Documentation:** `docs/ALGORITHM.md`
+- **Setup Guide:** `README.md`
+- **Changelog:** `docs/CHANGELOG.md`
+- **Troubleshooting:** `README.md` → Troubleshooting section
+
+---
+
+*French Novel Processor v2.1 - Making French literature accessible, one sentence at a time.* 🇫🇷📖✨

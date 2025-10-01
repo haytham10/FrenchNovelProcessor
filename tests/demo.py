@@ -121,7 +121,7 @@ def demo_cost_estimation():
     print_header("DEMO 4: Cost Estimation")
     
     try:
-        from src.rewriters.ai_rewriter import AIRewriter
+        from src.rewriters.ai_rewriter_backup_2 import AIRewriter
         
         # Create rewriter with dummy key for estimation only
         rewriter = AIRewriter(api_key="dummy_key_for_demo")

@@ -45,52 +45,58 @@ That's it! Drop a PDF, click process, and download results. 📥➡️✂️➡�
 
 ## 🌟 Features
 
-### Core Capabilities
-- 🤖 **AI-Powered Rewriting** - Intelligent sentence restructuring using OpenAI GPT-5 nano or Google Gemini
+### Core Algorithm
+The tool analyzes each sentence in your French text:
+- ✅ **Sentences with 8 words or fewer** → Added directly to output
+- ✂️ **Sentences longer than 8 words** → Rewritten into multiple sentences, each ≤8 words
+- 🎯 **Smart Rewriting** → Preserves meaning, reuses original words, maintains grammar
+- ⚙️ **Configurable Word Limit** → Default is 8, but you can adjust to any number
+
+### AI-Powered Processing
+- 🤖 **Gemini AI** (Development) - Free tier, intelligent sentence restructuring
+- 🤖 **OpenAI GPT-5 nano** (Production) - Premium quality, cost-effective
+- 📝 **Mechanical Fallback** - Simple word-based chunking if AI unavailable
+
+### Features
 - 📄 **PDF Processing** - Extract text from PDFs with OCR support for scanned documents
-- ✂️ **Smart Splitting** - Break long sentences into grammatically correct shorter ones
 - 🌍 **French Language** - Optimized for French grammar and syntax
 - 💰 **Cost Tracking** - Real-time cost estimation and token usage monitoring
 - 📊 **Excel/CSV Export** - Professional output with original/rewritten comparisons
-
-### AI Provider Options
-- **OpenAI GPT-5 nano** - Fastest & cheapest, recommended for production ($0.50-1 per novel)
-- **Google Gemini 2.5 Flash Lite** - Cost-effective alternative with free tier
-- **Legacy Mode** - Mechanical chunking without AI (offline, free)
-
-### User Interface
-- 🌐 **Web Interface** - Clean, intuitive browser-based UI
-- 📈 **Progress Tracking** - Real-time progress updates with detailed status
-- ⚙️ **Easy Configuration** - Simple settings management
-- 🔄 **Drag & Drop** - Easy file uploads
+- 📈 **Google Sheets Integration** - Direct upload to Google Sheets
+- 🌐 **Web Interface** - Clean, intuitive browser-based UI with drag & drop
 
 ---
 
 ## 🌟 What's New in Version 2.0
 
+**Core Algorithm (NEW!):**
+The tool now follows a precise algorithm:
+1. 📖 **Analyze each sentence** - Process the book sentence by sentence
+2. ✅ **Short sentences (≤8 words)** → Add directly to Google Sheet
+3. ✂️ **Long sentences (>8 words)** → Rewrite into multiple sentences, each ≤8 words
+4. 🎯 **Smart rewriting** → Preserves meaning, reuses original words, maintains proper French grammar
+5. ⚙️ **Configurable word limit** → Default is 8, but adjustable to any number
+
+**Example:**
+```
+Input: "Pierre marche lentement dans le grand parc avec son chien." (10 words)
+Output: 
+  - "Pierre marche dans le parc." (5 words) ✓
+  - "Il est avec son chien." (5 words) ✓
+```
+
 **Major Improvements:**
-- ✨ **AI Integration** - OpenAI GPT-5 nano and Google Gemini support
-- 🏗️ **Code Organization** - Professional package structure with comprehensive documentation
-- 📚 **Complete Documentation** - Guides for users, developers, and maintainers
-- 🧪 **Full Test Coverage** - Comprehensive test suite
-- 🔧 **Enhanced Tools** - Organized scripts and utilities
+- ✨ **AI Integration** - OpenAI GPT-5 nano and Google Gemini support for intelligent rewriting
+- 🏗️ **Precise Algorithm** - Clear rules: ≤8 words = direct output, >8 words = rewrite
+- 📚 **Complete Documentation** - New ALGORITHM.md explains the exact processing flow
+- 🔧 **Enhanced Validation** - Ensures all output sentences meet the word limit
 
-**Why Upgrade:**
-Instead of mechanically chunking sentences into awkward 8-word pieces, version 2.0 intelligently rewrites sentences to preserve grammar, meaning, and natural flow.
-
-### Example Transformation
-
-**Before (Mechanical):**
-- Input: "Le chat noir dormait paisiblement sur le canapé confortable près de la fenêtre"
-- Output:
-  - "Le chat noir dormait paisiblement sur"
-  - "le canapé confortable près de la"
-
-**After (AI-Powered):**
-- Input: "Le chat noir dormait paisiblement sur le canapé confortable près de la fenêtre"
-- Output:
-  - "Le chat noir dormait sur le canapé."
-  - "Le canapé était confortable et près de la fenêtre."
+**Why This Matters:**
+Instead of awkward mechanical chunks, you get grammatically correct sentences that:
+- Meet the word limit (8 or your chosen number)
+- Preserve the original meaning
+- Sound natural in French
+- Reuse words from the original text
 
 ---
 
@@ -374,7 +380,6 @@ FrenchNovelProcessor/
 │   ├── QUICK_REFERENCE.md        # Quick reference guide
 │   ├── MAINTENANCE.md            # Developer guide
 │   ├── CHANGELOG.md              # Version history
-│   ├── CLEANUP_SUMMARY.md        # Organization changes
 │   └── DRP.md                    # Development requirements
 │
 ├── 🔧 scripts/                    # Automation scripts
