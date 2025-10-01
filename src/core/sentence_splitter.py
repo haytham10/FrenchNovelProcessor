@@ -209,35 +209,55 @@ class SentenceSplitter:
                 success=True
             )
     
+    def _get_optimal_batch_size(self, avg_word_count: int) -> int:
+        """
+        Determine optimal batch size based on sentence complexity
+        
+        Args:
+            avg_word_count: Average word count of sentences in batch
+            
+        Returns:
+            Optimal batch size
+        """
+        if avg_word_count <= 12:
+            return 35  # Simple sentences: larger batches
+        elif avg_word_count <= 18:
+            return 25  # Medium sentences: standard batches
+        else:
+            return 15  # Complex sentences: smaller batches
+    
     def _process_text_batch(self, sentences: List[str], progress_callback=None):
         """
-        Process text using batch AI rewriting for better performance
+        Process text using adaptive batch AI rewriting for optimal performance
         
         Args:
             sentences: List of sentences to process
             progress_callback: Optional callback function
         """
-        batch_size = 20  # Process 20 sentences per API call (aggressively optimized)
         i = 0
         total = len(sentences)
         
-        logger.info(f"Starting batch processing: {total} sentences, batch_size={batch_size}")
+        logger.info(f"Starting adaptive batch processing: {total} sentences")
         
         while i < total:
-            # Collect sentences for this batch
+            # Collect sentences for this batch (adaptive sizing)
             batch_sentences = []
             batch_indices = []
+            batch_word_counts = []
             
-            for j in range(batch_size):
-                if i + j >= total:
-                    break
-                    
+            # First pass: determine batch composition
+            temp_batch = []
+            temp_indices = []
+            j = 0
+            max_look_ahead = 50  # Look ahead up to 50 sentences
+            
+            while j < max_look_ahead and (i + j) < total:
                 sentence = sentences[i + j]
                 word_count = self.count_words(sentence)
                 
-                # Check if sentence needs processing
+                # Quick categorization
                 if word_count <= self.word_limit:
-                    # Direct pass-through
+                    # Direct pass-through (handle immediately)
                     self.stats['total_sentences'] += 1
                     self.stats['direct_sentences'] += 1
                     result = SentenceResult(
@@ -256,15 +276,15 @@ class SentenceSplitter:
                         except Exception:
                             pass
                             
-                elif word_count > 25:  # Skip very long sentences (likely to fail validation)
-                    # Use mechanical chunking directly
+                elif word_count > 30:  # Optimization: very long sentences use mechanical chunking
+                    # Use mechanical chunking directly (faster, no API cost)
                     self.stats['total_sentences'] += 1
                     self.stats['mechanical_chunked'] += 1
                     chunks = self.mechanical_chunk(sentence)
                     result = SentenceResult(
                         original=sentence,
                         output_sentences=chunks,
-                        method="Mechanical-Chunked (too long for AI)",
+                        method="Mechanical-Chunked (>30 words, optimized)",
                         word_count=word_count,
                         success=True
                     )
@@ -278,14 +298,29 @@ class SentenceSplitter:
                             pass
                 else:
                     # Add to batch for AI rewriting
-                    batch_sentences.append(sentence)
-                    batch_indices.append(i + j)
+                    temp_batch.append(sentence)
+                    temp_indices.append(i + j)
+                    batch_word_counts.append(word_count)
+                
+                j += 1
+            
+            # Determine optimal batch size based on complexity
+            if temp_batch:
+                avg_word_count = sum(batch_word_counts) / len(batch_word_counts)
+                optimal_batch_size = self._get_optimal_batch_size(avg_word_count)
+                
+                # Take only optimal_batch_size sentences
+                batch_sentences = temp_batch[:optimal_batch_size]
+                batch_indices = temp_indices[:optimal_batch_size]
+                
+                logger.info(f"Batch composition: {len(batch_sentences)} sentences, "
+                          f"avg {avg_word_count:.1f} words, batch_size={optimal_batch_size}")
             
             # Process the batch with AI if we have any sentences
             if batch_sentences:
                 try:
                     # Call batch rewrite
-                    logger.info(f"Processing batch of {len(batch_sentences)} sentences (batch #{self.stats['api_calls']+1})")
+                    logger.info(f"Processing AI batch of {len(batch_sentences)} sentences (call #{self.stats['api_calls']+1})")
                     rewritten_dict = self.ai_rewriter.rewrite_batch(batch_sentences)
                     self.stats['api_calls'] += 1
                     logger.info(f"Batch processed successfully, got {len(rewritten_dict)} results")
@@ -377,8 +412,8 @@ class SentenceSplitter:
                             except Exception:
                                 pass
             
-            # Move to next batch
-            i += batch_size
+            # Move to next position (account for sentences we just processed)
+            i += j
     
     def process_text(self, text: str, progress_callback=None) -> List[SentenceResult]:
         """
