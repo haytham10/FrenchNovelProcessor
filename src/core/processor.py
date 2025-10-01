@@ -165,6 +165,8 @@ class NovelProcessor:
 
         # Create splitter for the chosen mode (AI or mechanical)
         splitter = SentenceSplitter(word_limit=word_limit, mode=mode, api_key=api_key, use_gemini=use_gemini)
+        # Expose the live splitter so summaries can report API usage and token cost in the UI
+        self._active_splitter = splitter
 
         # Process sentences
         if progress_callback:
@@ -178,6 +180,13 @@ class NovelProcessor:
         self.results = results
 
         self.processing_time = time.time() - self.start_time
+
+        # After processing, update final stats one more time for UI consumers
+        try:
+            if progress_callback:
+                progress_callback(len(self.results), len(self.results), 'Processing complete')
+        except Exception:
+            pass
 
         return self.results
     
@@ -477,6 +486,28 @@ class NovelProcessor:
                 column_widths_map[2] = 100  # Word_Count
             
             sheets_manager.set_column_widths(spreadsheet_id, sheet1_id, column_widths_map)
+
+            # Make rows compact like image 2: disable wrap and set fixed row height
+            total_rows = len(df) + 1  # include header
+            total_cols = len(df.columns)
+            # Disable wrapping (clip) and center vertically
+            sheets_manager.set_wrap_strategy(
+                spreadsheet_id,
+                sheet1_id,
+                start_row=0,
+                end_row=total_rows,
+                start_col=0,
+                end_col=total_cols,
+                strategy='CLIP'
+            )
+            # Set a tidy fixed height (22px is a typical compact row height)
+            sheets_manager.set_row_heights(
+                spreadsheet_id,
+                sheet1_id,
+                start_row=0,
+                end_row=total_rows,
+                pixel_size=22
+            )
             
             # Color code rows based on method
             if 'Method' in df.columns:
@@ -552,6 +583,23 @@ class NovelProcessor:
                     # Set column widths
                     log_widths = {i: 250 for i in range(len(log_df.columns))}
                     sheets_manager.set_column_widths(spreadsheet_id, log_sheet_id, log_widths)
+                    # Apply compact row formatting to Processing Log as well
+                    sheets_manager.set_wrap_strategy(
+                        spreadsheet_id,
+                        log_sheet_id,
+                        start_row=0,
+                        end_row=len(log_df) + 1,
+                        start_col=0,
+                        end_col=len(log_df.columns),
+                        strategy='CLIP'
+                    )
+                    sheets_manager.set_row_heights(
+                        spreadsheet_id,
+                        log_sheet_id,
+                        start_row=0,
+                        end_row=len(log_df) + 1,
+                        pixel_size=22
+                    )
         
         # Add Summary sheet
         summary = self.get_summary()
@@ -592,6 +640,23 @@ class NovelProcessor:
             
             # Set column widths
             sheets_manager.set_column_widths(spreadsheet_id, summary_sheet_id, {0: 250, 1: 150})
+            # Compact row formatting for Summary
+            sheets_manager.set_wrap_strategy(
+                spreadsheet_id,
+                summary_sheet_id,
+                start_row=0,
+                end_row=len(summary_data),
+                start_col=0,
+                end_col=2,
+                strategy='CLIP'
+            )
+            sheets_manager.set_row_heights(
+                spreadsheet_id,
+                summary_sheet_id,
+                start_row=0,
+                end_row=len(summary_data),
+                pixel_size=22
+            )
             
             # Bold metric names
             bold_requests = [{

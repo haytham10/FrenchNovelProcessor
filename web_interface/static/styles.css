@@ -741,32 +741,95 @@ header .subtitle {
 
 .stage-chips {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
     margin: 22px 0 18px;
+    padding: 16px;
+    background: rgba(74, 144, 226, 0.04);
+    border-radius: 16px;
 }
 
 .chip {
-    padding: 8px 16px;
-    border-radius: 999px;
-    background: rgba(74, 144, 226, 0.08);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.8);
     color: var(--muted-text);
     font-weight: 600;
-    border: 1px solid transparent;
-    transition: background 0.2s ease, color 0.2s ease, border 0.2s ease;
+    font-size: 0.95rem;
+    border: 2px solid rgba(74, 144, 226, 0.15);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.chip-icon {
+    font-size: 1.3rem;
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+
+.chip-label {
+    white-space: nowrap;
+}
+
+.chip-separator {
+    color: rgba(74, 144, 226, 0.3);
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin: 0 8px;
+    transition: color 0.3s ease;
 }
 
 .chip.active {
-    background: rgba(74, 144, 226, 0.15);
+    background: rgba(74, 144, 226, 0.12);
     color: var(--primary-dark);
-    border-color: rgba(74, 144, 226, 0.35);
+    border-color: rgba(74, 144, 226, 0.4);
+}
+
+.chip.active .chip-icon {
+    opacity: 0.9;
+}
+
+.chip.active ~ .chip-separator {
+    color: rgba(74, 144, 226, 0.5);
 }
 
 .chip.current {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: #fff;
-    border-color: transparent;
-    box-shadow: 0 10px 22px rgba(74, 144, 226, 0.25);
+    border-color: var(--primary-color);
+    box-shadow: 0 6px 16px rgba(74, 144, 226, 0.3);
+    transform: scale(1.05);
+}
+
+.chip.current .chip-icon {
+    opacity: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+@media (max-width: 768px) {
+    .stage-chips {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+    
+    .chip-separator {
+        display: none;
+    }
+    
+    .chip {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+    }
+    
+    .chip-icon {
+        font-size: 1.1rem;
+    }
 }
 
 .progress-bar {
@@ -807,31 +870,119 @@ header .subtitle {
     color: var(--secondary-color);
 }
 
-/* Stats grid */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 18px;
+/* Stats container */
+.stats-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 24px;
 }
 
-.stat-item {
-    background: rgba(255, 255, 255, 0.8);
+.stats-row {
+    display: grid;
+    gap: 14px;
+}
+
+.stats-primary {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.stats-secondary {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.stat-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
     border-radius: 16px;
-    padding: 18px 20px;
-    border-left: 5px solid rgba(74, 144, 226, 0.65);
-    box-shadow: 0 8px 18px rgba(31, 45, 61, 0.08);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-left: 4px solid;
+    box-shadow: 0 4px 12px rgba(31, 45, 61, 0.08);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(31, 45, 61, 0.12);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    line-height: 1;
+    opacity: 0.9;
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
 }
 
 .stat-label {
     color: var(--muted-text);
-    font-size: 0.9rem;
-    margin-bottom: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .stat-value {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: 700;
     color: var(--primary-dark);
+    line-height: 1.2;
+}
+
+/* Stat card variants */
+.stat-card-primary {
+    border-left-color: #4A90E2;
+}
+
+.stat-card-success {
+    border-left-color: #27AE60;
+}
+
+.stat-card-ai {
+    border-left-color: #9B59B6;
+}
+
+.stat-card-ai .stat-value {
+    color: #9B59B6;
+}
+
+.stat-card-info {
+    border-left-color: #3498DB;
+}
+
+.stat-card-cost {
+    border-left-color: #F39C12;
+}
+
+.stat-card-cost .stat-value {
+    color: #F39C12;
+}
+
+.stat-card-time {
+    border-left-color: #1ABC9C;
+}
+
+/* Responsive design for stats */
+@media (max-width: 768px) {
+    .stats-primary,
+    .stats-secondary {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .stat-icon {
+        font-size: 1.6rem;
+    }
 }
 
 /* Results */

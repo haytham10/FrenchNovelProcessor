@@ -9,6 +9,7 @@ from typing import List, Tuple, Optional
 from enum import Enum
 from src.rewriters.ai_rewriter import AIRewriter
 from src.utils.validator import SentenceValidator
+from src.utils.text_cleaner import clean_text_for_ai
 
 logger = logging.getLogger(__name__)
 
@@ -208,6 +209,177 @@ class SentenceSplitter:
                 success=True
             )
     
+    def _process_text_batch(self, sentences: List[str], progress_callback=None):
+        """
+        Process text using batch AI rewriting for better performance
+        
+        Args:
+            sentences: List of sentences to process
+            progress_callback: Optional callback function
+        """
+        batch_size = 20  # Process 20 sentences per API call (aggressively optimized)
+        i = 0
+        total = len(sentences)
+        
+        logger.info(f"Starting batch processing: {total} sentences, batch_size={batch_size}")
+        
+        while i < total:
+            # Collect sentences for this batch
+            batch_sentences = []
+            batch_indices = []
+            
+            for j in range(batch_size):
+                if i + j >= total:
+                    break
+                    
+                sentence = sentences[i + j]
+                word_count = self.count_words(sentence)
+                
+                # Check if sentence needs processing
+                if word_count <= self.word_limit:
+                    # Direct pass-through
+                    self.stats['total_sentences'] += 1
+                    self.stats['direct_sentences'] += 1
+                    result = SentenceResult(
+                        original=sentence,
+                        output_sentences=[sentence],
+                        method="Direct",
+                        word_count=word_count,
+                        success=True
+                    )
+                    self.results.append(result)
+                    
+                    if progress_callback:
+                        progress_callback(i + j + 1, total, sentence)
+                        try:
+                            progress_callback(i + j + 1, total, {'done': True, 'index': i + j + 1})
+                        except Exception:
+                            pass
+                            
+                elif word_count > 25:  # Skip very long sentences (likely to fail validation)
+                    # Use mechanical chunking directly
+                    self.stats['total_sentences'] += 1
+                    self.stats['mechanical_chunked'] += 1
+                    chunks = self.mechanical_chunk(sentence)
+                    result = SentenceResult(
+                        original=sentence,
+                        output_sentences=chunks,
+                        method="Mechanical-Chunked (too long for AI)",
+                        word_count=word_count,
+                        success=True
+                    )
+                    self.results.append(result)
+                    
+                    if progress_callback:
+                        progress_callback(i + j + 1, total, sentence)
+                        try:
+                            progress_callback(i + j + 1, total, {'done': True, 'index': i + j + 1})
+                        except Exception:
+                            pass
+                else:
+                    # Add to batch for AI rewriting
+                    batch_sentences.append(sentence)
+                    batch_indices.append(i + j)
+            
+            # Process the batch with AI if we have any sentences
+            if batch_sentences:
+                try:
+                    # Call batch rewrite
+                    logger.info(f"Processing batch of {len(batch_sentences)} sentences (batch #{self.stats['api_calls']+1})")
+                    rewritten_dict = self.ai_rewriter.rewrite_batch(batch_sentences)
+                    self.stats['api_calls'] += 1
+                    logger.info(f"Batch processed successfully, got {len(rewritten_dict)} results")
+                    
+                    # Process each result
+                    for idx, orig_sentence in enumerate(batch_sentences):
+                        self.stats['total_sentences'] += 1
+                        word_count = self.count_words(orig_sentence)
+                        actual_idx = batch_indices[idx]
+                        
+                        # Get rewritten sentences from dict
+                        rewritten = rewritten_dict.get(orig_sentence, [])
+                        
+                        if not rewritten:
+                            # No result from AI - fall back to mechanical chunking
+                            logger.warning(f"No AI result for sentence: {orig_sentence[:50]}...")
+                            chunks = self.mechanical_chunk(orig_sentence)
+                            self.stats['mechanical_chunked'] += 1
+                            result = SentenceResult(
+                                original=orig_sentence,
+                                output_sentences=chunks,
+                                method="Mechanical-Chunked (AI no result)",
+                                word_count=word_count,
+                                success=True,
+                                error="No AI result"
+                            )
+                        else:
+                            # Validate the rewrite
+                            is_valid, error_msg, details = self.validator.validate_rewrite(
+                                orig_sentence, rewritten
+                            )
+                            
+                            if is_valid:
+                                self.stats['ai_rewritten'] += 1
+                                result = SentenceResult(
+                                    original=orig_sentence,
+                                    output_sentences=rewritten,
+                                    method="AI-Rewritten",
+                                    word_count=word_count,
+                                    success=True
+                                )
+                            else:
+                                # Validation failed - fall back to mechanical chunking
+                                logger.warning(f"AI rewrite validation failed: {error_msg}")
+                                chunks = self.mechanical_chunk(orig_sentence)
+                                self.stats['mechanical_chunked'] += 1
+                                result = SentenceResult(
+                                    original=orig_sentence,
+                                    output_sentences=chunks,
+                                    method="Mechanical-Chunked (AI validation failed)",
+                                    word_count=word_count,
+                                    success=True,
+                                    error=error_msg
+                                )
+                        
+                        self.results.append(result)
+                        
+                        if progress_callback:
+                            progress_callback(actual_idx + 1, total, orig_sentence)
+                            try:
+                                progress_callback(actual_idx + 1, total, {'done': True, 'index': actual_idx + 1})
+                            except Exception:
+                                pass
+                                
+                except Exception as e:
+                    # Batch failed - fall back to mechanical chunking for all sentences in batch
+                    logger.error(f"Batch AI rewriting failed: {str(e)}")
+                    for idx, orig_sentence in enumerate(batch_sentences):
+                        self.stats['total_sentences'] += 1
+                        word_count = self.count_words(orig_sentence)
+                        actual_idx = batch_indices[idx]
+                        
+                        chunks = self.mechanical_chunk(orig_sentence)
+                        self.stats['mechanical_chunked'] += 1
+                        result = SentenceResult(
+                            original=orig_sentence,
+                            output_sentences=chunks,
+                            method="Mechanical-Chunked (AI batch failed)",
+                            word_count=word_count,
+                            success=True,
+                            error=str(e)
+                        )
+                        self.results.append(result)
+                        
+                        if progress_callback:
+                            progress_callback(actual_idx + 1, total, orig_sentence)
+                            try:
+                                progress_callback(actual_idx + 1, total, {'done': True, 'index': actual_idx + 1})
+                            except Exception:
+                                pass
+            
+            # Move to next batch
+            i += batch_size
+    
     def process_text(self, text: str, progress_callback=None) -> List[SentenceResult]:
         """
         Process entire text
@@ -219,7 +391,9 @@ class SentenceSplitter:
         Returns:
             List of SentenceResult objects
         """
-        sentences = self.extract_sentences(text)
+        # Pre-clean OCR artifacts to improve splitting and AI quality
+        cleaned = clean_text_for_ai(text)
+        sentences = self.extract_sentences(cleaned)
 
         # Reset live results for this run - clear the existing list so external
         # references (e.g. processor.results) remain valid.
@@ -229,25 +403,30 @@ class SentenceSplitter:
             # If results is not yet a list, ensure it's an empty list
             self.results = []
 
-        for i, sentence in enumerate(sentences):
-            if progress_callback:
-                progress_callback(i + 1, len(sentences), sentence)
+        # Use batch processing for AI mode
+        if self.mode == ProcessingMode.AI_REWRITE and self.ai_rewriter:
+            self._process_text_batch(sentences, progress_callback)
+        else:
+            # Fallback to sentence-by-sentence processing
+            for i, sentence in enumerate(sentences):
+                if progress_callback:
+                    progress_callback(i + 1, len(sentences), sentence)
 
-            result = self.process_sentence(sentence)
-            # Append to live results so external observers (processor) see updates
-            self.results.append(result)
+                result = self.process_sentence(sentence)
+                # Append to live results so external observers (processor) see updates
+                self.results.append(result)
 
-            # Notify again after appending so summaries computed from results include this sentence
-            if progress_callback:
-                # Send a non-string payload so callers treat this as a status update
-                try:
-                    progress_callback(i + 1, len(sentences), {'done': True, 'index': i + 1})
-                except Exception:
-                    # Be tolerant of callbacks that expect strings
+                # Notify again after appending so summaries computed from results include this sentence
+                if progress_callback:
+                    # Send a non-string payload so callers treat this as a status update
                     try:
-                        progress_callback(i + 1, len(sentences), f'Done {i+1}')
+                        progress_callback(i + 1, len(sentences), {'done': True, 'index': i + 1})
                     except Exception:
-                        pass
+                        # Be tolerant of callbacks that expect strings
+                        try:
+                            progress_callback(i + 1, len(sentences), f'Done {i+1}')
+                        except Exception:
+                            pass
 
         return self.results
     

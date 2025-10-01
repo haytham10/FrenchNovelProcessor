@@ -74,9 +74,9 @@ class ConfigManager:
     def get_openai_model(self) -> str:
         """Get OpenAI model"""
         try:
-            return self.config.get('OpenAI', 'model', fallback='gpt-5-nano')
+            return self.config.get('OpenAI', 'model', fallback='gpt-5-mini')
         except:
-            return 'gpt-5-nano'
+            return 'gpt-5-mini'
     
     def set_api_key(self, api_key: str):
         """Set OpenAI API key"""

@@ -35,6 +35,7 @@ class GeminiRewriter:
         self.word_limit = word_limit
         self.total_input_tokens = 0
         self.total_output_tokens = 0
+        self.api_call_count = 0  # Track API calls for stats
         
         # Gemini 2.5 Flash Lite pricing
         self.input_price_per_1m = 0.10
@@ -138,6 +139,9 @@ Output format: One sentence per line, no numbering."""
                 config=config
             )
             
+            # Track API call
+            self.api_call_count += 1
+            
             # Track token usage from response metadata
             if hasattr(response, 'usage_metadata') and response.usage_metadata:
                 if hasattr(response.usage_metadata, 'prompt_token_count'):
@@ -170,6 +174,125 @@ Output format: One sentence per line, no numbering."""
             
         except Exception as e:
             logger.error(f"Gemini rewrite error: {str(e)}")
+            raise
+    
+    def rewrite_batch(self, sentences: list[str]) -> dict[str, list[str]]:
+        """
+        Rewrite multiple sentences in one API call (MUCH faster!)
+        
+        Args:
+            sentences: List of sentences to rewrite
+            
+        Returns:
+            Dictionary mapping original sentence to list of rewritten sentences
+        """
+        if not sentences:
+            return {}
+        
+        # Build batch prompt
+        numbered_sentences = "\n".join([f"{i+1}. {s}" for i, s in enumerate(sentences)])
+        
+        batch_prompt = f"""Rewrite these French sentences. Each sentence must be split into chunks of EXACTLY {self.word_limit} words or fewer.
+
+INPUT:
+{numbered_sentences}
+
+REQUIRED OUTPUT FORMAT (one line per sentence):
+1: rewritten sentence one. rewritten sentence two.
+2: rewritten sentence one. rewritten sentence two.
+3: rewritten sentence one.
+
+RULES:
+- Each line starts with "NUMBER: " 
+- Each rewritten chunk is {self.word_limit} words or fewer
+- Preserve the original meaning
+- Use words from the original text
+- NO explanations or extra text"""
+        
+        try:
+            # Configure generation settings
+            import time
+            start_time = time.time()
+            
+            config = types.GenerateContentConfig(
+                temperature=0.3,
+                top_p=0.95,
+                top_k=40,
+                max_output_tokens=max(1500, len(sentences) * 100)  # Dynamic limit
+            )
+            
+            # Make API call
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=batch_prompt,
+                config=config
+            )
+            
+            api_time = time.time() - start_time
+            logger.info(f"Gemini API call for batch of {len(sentences)} took {api_time:.2f}s")
+            
+            # Track API call
+            self.api_call_count += 1
+            
+            # Track token usage
+            if hasattr(response, 'usage_metadata') and response.usage_metadata:
+                if hasattr(response.usage_metadata, 'prompt_token_count'):
+                    self.total_input_tokens += response.usage_metadata.prompt_token_count
+                if hasattr(response.usage_metadata, 'candidates_token_count'):
+                    self.total_output_tokens += response.usage_metadata.candidates_token_count
+            else:
+                # Fallback estimation
+                self.total_input_tokens += self.estimate_tokens(batch_prompt)
+                self.total_output_tokens += self.estimate_tokens(response.text)
+            
+            # Parse batch response
+            content = response.text.strip()
+            logger.info(f"Gemini batch response (first 500 chars): {content[:500]}")
+            lines = [line.strip() for line in content.split('\n') if line.strip()]
+            
+            results = {}
+            
+            # Try to parse each line
+            for line in lines:
+                # Skip lines that are clearly not results
+                if not line or line.startswith('INPUT') or line.startswith('OUTPUT') or line.startswith('RULE'):
+                    continue
+                    
+                # Try format: "1: sentence" or "1. sentence"
+                if ':' in line or ('. ' in line and line[0].isdigit()):
+                    try:
+                        # Handle both "1: text" and "1. text" formats
+                        if ':' in line:
+                            num_str, rewrites = line.split(':', 1)
+                        else:
+                            # Handle "1. text" format
+                            parts = line.split('. ', 1)
+                            if len(parts) == 2 and parts[0].isdigit():
+                                num_str, rewrites = parts
+                            else:
+                                continue
+                        
+                        idx = int(num_str.strip().rstrip('.')) - 1
+                        
+                        if 0 <= idx < len(sentences):
+                            # Split into individual sentences
+                            rewritten = [s.strip() for s in rewrites.split('.') if s.strip()]
+                            # Add periods back
+                            rewritten = [s if s.endswith('.') else s + '.' for s in rewritten]
+                            results[sentences[idx]] = rewritten
+                            logger.debug(f"Parsed sentence {idx+1}: {rewritten}")
+                        else:
+                            logger.warning(f"Index {idx+1} out of range (batch size: {len(sentences)})")
+                    except (ValueError, IndexError) as e:
+                        logger.warning(f"Failed to parse line: '{line}' - Error: {e}")
+                        continue
+            
+            logger.info(f"Gemini batch parsing complete: {len(results)}/{len(sentences)} sentences parsed")
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Gemini batch rewrite error: {str(e)}")
             raise
     
     def get_current_cost(self) -> float:
@@ -219,6 +342,7 @@ Output format: One sentence per line, no numbering."""
         """Reset token counters"""
         self.total_input_tokens = 0
         self.total_output_tokens = 0
+        self.api_call_count = 0
     
     def get_token_stats(self) -> dict:
         """Get current token usage statistics"""
@@ -226,5 +350,6 @@ Output format: One sentence per line, no numbering."""
             'input_tokens': self.total_input_tokens,
             'output_tokens': self.total_output_tokens,
             'total_tokens': self.total_input_tokens + self.total_output_tokens,
-            'cost': self.get_current_cost()
+            'cost': self.get_current_cost(),
+            'api_call_count': self.api_call_count
         }

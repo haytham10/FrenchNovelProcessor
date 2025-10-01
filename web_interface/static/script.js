@@ -459,17 +459,33 @@ function updateProgress(status) {
             }
         }
 
-        // Update stage indicator
-        let nextStage = 'analyzing';
-        if (status.stats.ai_rewritten > 0 || status.progress >= 30) {
-            nextStage = 'rewriting';
+        // Update stage indicator based on status message and progress
+        let nextStage = 'upload';
+        
+        if (status.status_message) {
+            const msg = status.status_message.toLowerCase();
+            
+            // Check status message for stage clues
+            if (msg.includes('extracting') || msg.includes('running ocr') || msg.includes('analyzing')) {
+                nextStage = 'analyzing';
+            } else if (msg.includes('processing sentence') || msg.includes('rewriting')) {
+                nextStage = 'rewriting';
+            } else if (msg.includes('generating output') || msg.includes('creating google') || msg.includes('complete')) {
+                nextStage = 'export';
+            }
         }
-        if (status.progress >= 85 || status.stats.total_output_sentences) {
+        
+        // Override based on progress percentage if needed
+        if (status.progress <= 5) {
+            nextStage = 'upload';
+        } else if (status.progress > 5 && status.progress <= 45) {
+            nextStage = 'analyzing';
+        } else if (status.progress > 45 && status.progress < 95) {
+            nextStage = 'rewriting';
+        } else if (status.progress >= 95) {
             nextStage = 'export';
         }
-        if (status.progress <= 2) {
-            nextStage = 'analyzing';
-        }
+        
         setStage(nextStage);
     }
 }
@@ -551,7 +567,7 @@ function updateStatusCards(patch = {}) {
         : 'AI Rewriting';
     const modeMeta = state.processing_mode === 'mechanical_chunking'
         ? 'Splits sentences offline every few words.'
-        : 'Uses GPT-4o-mini for natural French output.';
+        : 'Uses GPT-5-nano for natural French output.';
     const modeIcon = state.processing_mode === 'mechanical_chunking' ? '⚙️' : '🤖';
     if (modeValueEl) modeValueEl.textContent = modeValue;
     if (modeMetaEl) modeMetaEl.textContent = modeMeta;

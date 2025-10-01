@@ -192,7 +192,7 @@
                 <div class="status-body">
                     <h3 class="status-title">Processing Mode</h3>
                     <p class="status-value" id="cardModeValue">AI Rewriting</p>
-                    <p class="status-meta" id="cardModeMeta">Uses GPT-4o-mini for natural-sounding rewrites.</p>
+                    <p class="status-meta" id="cardModeMeta">Uses GPT-5-nano for natural-sounding rewrites.</p>
                 </div>
             </article>
             <article class="status-card">
@@ -272,10 +272,25 @@
                 </div>
 
                 <div class="stage-chips" id="stageChips" aria-label="Processing stage">
-                    <span class="chip active current" data-stage="upload">Upload</span>
-                    <span class="chip" data-stage="analyzing">Analyzing</span>
-                    <span class="chip" data-stage="rewriting">AI Rewriting</span>
-                    <span class="chip" data-stage="export">Export</span>
+                    <div class="chip active current" data-stage="upload">
+                        <span class="chip-icon">📤</span>
+                        <span class="chip-label">Upload</span>
+                    </div>
+                    <div class="chip-separator">→</div>
+                    <div class="chip" data-stage="analyzing">
+                        <span class="chip-icon">🔍</span>
+                        <span class="chip-label">Analyzing</span>
+                    </div>
+                    <div class="chip-separator">→</div>
+                    <div class="chip" data-stage="rewriting">
+                        <span class="chip-icon">🤖</span>
+                        <span class="chip-label">AI Rewriting</span>
+                    </div>
+                    <div class="chip-separator">→</div>
+                    <div class="chip" data-stage="export">
+                        <span class="chip-icon">📊</span>
+                        <span class="chip-label">Export</span>
+                    </div>
                 </div>
 
                 <div class="progress-bar">
@@ -288,30 +303,55 @@
                     <p id="currentSentence" class="current-sentence"></p>
                 </div>
 
-                <div class="stats-grid" id="statsGrid">
-                    <div class="stat-item">
-                        <span class="stat-label">Total Sentences</span>
-                        <span class="stat-value" id="statTotal">0</span>
+                <div class="stats-container">
+                    <!-- Main Stats Row -->
+                    <div class="stats-row stats-primary">
+                        <div class="stat-card stat-card-primary">
+                            <div class="stat-icon">📊</div>
+                            <div class="stat-content">
+                                <span class="stat-label">Total Sentences</span>
+                                <span class="stat-value" id="statTotal">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-card-success">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-content">
+                                <span class="stat-label">Direct</span>
+                                <span class="stat-value" id="statDirect">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-card-ai">
+                            <div class="stat-icon">🤖</div>
+                            <div class="stat-content">
+                                <span class="stat-label">AI-Rewritten</span>
+                                <span class="stat-value" id="statAI">0</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Direct</span>
-                        <span class="stat-value" id="statDirect">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">AI-Rewritten</span>
-                        <span class="stat-value" id="statAI">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">API Calls</span>
-                        <span class="stat-value" id="statAPICalls">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Estimated Cost</span>
-                        <span class="stat-value" id="statCost">$0.00</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Time Elapsed</span>
-                        <span class="stat-value" id="statTime">0s</span>
+
+                    <!-- Secondary Stats Row -->
+                    <div class="stats-row stats-secondary">
+                        <div class="stat-card stat-card-info">
+                            <div class="stat-icon">📡</div>
+                            <div class="stat-content">
+                                <span class="stat-label">API Calls</span>
+                                <span class="stat-value" id="statAPICalls">0</span>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-card-cost">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-content">
+                                <span class="stat-label">Estimated Cost</span>
+                                <span class="stat-value" id="statCost">$0.0000</span>
+                            </div>
+                        </div>
+                        <div class="stat-card stat-card-time">
+                            <div class="stat-icon">⏱️</div>
+                            <div class="stat-content">
+                                <span class="stat-label">Time Elapsed</span>
+                                <span class="stat-value" id="statTime">0s (ETA: -)</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -361,7 +401,7 @@
                 <article class="help-card">
                     <span class="help-icon">⏱️</span>
                     <h4>Know what to expect</h4>
-                    <p>Rewriting a 350-page novel takes 15-20 minutes on average and costs roughly $3-5 in OpenAI credits.</p>
+                    <p>Rewriting a 350-page novel takes 15-20 minutes on average and costs roughly $0.5-1 in OpenAI credits.</p>
                 </article>
                 <article class="help-card">
                     <span class="help-icon">🛠️</span>

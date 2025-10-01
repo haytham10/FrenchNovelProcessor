@@ -242,6 +242,63 @@ class GoogleSheetsManager:
         
         if requests:
             self.format_sheet(spreadsheet_id, sheet_id, requests)
+
+    def set_row_heights(self, spreadsheet_id: str, sheet_id: int,
+                         start_row: int, end_row: int, pixel_size: int):
+        """
+        Set a fixed row height for a range of rows.
+
+        Args:
+            spreadsheet_id: Spreadsheet ID
+            sheet_id: Target sheet ID
+            start_row: Zero-based start row index (inclusive)
+            end_row: Zero-based end row index (exclusive)
+            pixel_size: Row height in pixels
+        """
+        request = [{
+            'updateDimensionProperties': {
+                'range': {
+                    'sheetId': sheet_id,
+                    'dimension': 'ROWS',
+                    'startIndex': start_row,
+                    'endIndex': end_row
+                },
+                'properties': {
+                    'pixelSize': pixel_size
+                },
+                'fields': 'pixelSize'
+            }
+        }]
+        self.format_sheet(spreadsheet_id, sheet_id, request)
+
+    def set_wrap_strategy(self, spreadsheet_id: str, sheet_id: int,
+                           start_row: int, end_row: int,
+                           start_col: int, end_col: int,
+                           strategy: str = 'CLIP'):
+        """
+        Set text wrap strategy for a rectangular range.
+
+        strategy values: 'OVERFLOW_CELL', 'CLIP', or 'WRAP'.
+        """
+        request = [{
+            'repeatCell': {
+                'range': {
+                    'sheetId': sheet_id,
+                    'startRowIndex': start_row,
+                    'endRowIndex': end_row,
+                    'startColumnIndex': start_col,
+                    'endColumnIndex': end_col
+                },
+                'cell': {
+                    'userEnteredFormat': {
+                        'wrapStrategy': strategy,
+                        'verticalAlignment': 'MIDDLE'
+                    }
+                },
+                'fields': 'userEnteredFormat.wrapStrategy,userEnteredFormat.verticalAlignment'
+            }
+        }]
+        self.format_sheet(spreadsheet_id, sheet_id, request)
     
     def freeze_rows(self, spreadsheet_id: str, sheet_id: int, num_rows: int = 1):
         """
