@@ -234,7 +234,7 @@ class AIRewriter:
                     # Fallback: return original sentence (no markers); validator will decide
                     final_results[orig] = [orig]
                     continue
-                # Enforce word limit strictly
+                # Enforce word limit strictly - filter out sentences that exceed limit
                 processed = []
                 for sent in rewritten:
                     # Normalize minimal formatting first
@@ -243,9 +243,21 @@ class AIRewriter:
                     s = sent.strip()
                     if s and not s.endswith(('.', '!', '?')):
                         s = s.rstrip('.') + '.'
-                    processed.append(s)
-                # No strict token/order enforcement here to allow grammatical fixes
-                final_results[orig] = processed
+                    
+                    # Check word count and only include if within limit
+                    word_count = self.count_words(s)
+                    if word_count <= self.word_limit + 2:  # Allow small tolerance
+                        processed.append(s)
+                    else:
+                        # Skip sentences that exceed limit - they'll be caught by validation
+                        logger.debug(f"Skipping sentence exceeding word limit: {word_count} words (limit: {self.word_limit})")
+                
+                # Only return if we have valid sentences, otherwise return empty to trigger fallback
+                if processed:
+                    final_results[orig] = processed
+                else:
+                    # No valid sentences after filtering - return empty to trigger fallback
+                    final_results[orig] = []
             return final_results
             
         except Exception as e:

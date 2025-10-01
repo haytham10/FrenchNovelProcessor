@@ -175,8 +175,9 @@ class SentenceSplitter:
                     )
                 else:
                     # Validation failed - fall back to mechanical chunking
-                    logger.warning(f"AI rewrite validation failed: {error_msg}")
-                    logger.info("Falling back to mechanical chunking")
+                    # Use debug level instead of warning to avoid cluttering logs
+                    logger.debug(f"AI rewrite validation failed: {error_msg}")
+                    logger.debug("Falling back to mechanical chunking")
                     chunks = self.mechanical_chunk(sentence)
                     self.stats['mechanical_chunked'] += 1
                     return SentenceResult(
@@ -400,7 +401,8 @@ class SentenceSplitter:
                                     self.cache.put(orig_sentence, rewritten)
                             else:
                                 # Validation failed - fall back to mechanical chunking
-                                logger.warning(f"AI rewrite validation failed: {error_msg}")
+                                # Use debug level instead of warning to avoid cluttering logs
+                                logger.debug(f"AI rewrite validation failed: {error_msg}")
                                 chunks = self.mechanical_chunk(orig_sentence)
                                 self.stats['mechanical_chunked'] += 1
                                 result = SentenceResult(
